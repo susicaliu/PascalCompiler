@@ -1,6 +1,6 @@
 import ply.yacc as yacc
 from scanner.lex import tokens
-
+from analyzer.AST import *
 def p_program(p):
     'program : program_head  routine  SYM_PERIOD'
     p[0] = ProgramNode(p[1],p[2])
