@@ -186,34 +186,34 @@ class UnaryExprNode(AstNode):
 
 # --------------------------TypeDeclNode-------------------------------------
 
-class SimpleTypeDeclNode(TypeNode):
+class SimpleTypeDeclNode(AstNode):
     def __init__(self,type_name):
         super().__init__()
         self.type_name=type_name
 
-class VariableTypeDeclNode(TypeNode):
+class VariableTypeDeclNode(AstNode):
     def __init__(self,id):
         super().__init__()
         self.id=id
 
-class ArrayTypeDeclNode(TypeNode):
+class ArrayTypeDeclNode(AstNode):
     def __init__(self, simple_type_decl, type_decl):
         super().__init__()
         self.simple_type_decl = simple_type_decl
         self.type_decl = type_decl
 
-class EnumTypeDeclNode(TypeNode):
+class EnumTypeDeclNode(AstNode):
     def __init__(self, name_list):
         super().__init__()
         self.name_list = name_list
 
-class RecordTypeDeclNode(TypeNode):
+class RecordTypeDeclNode(AstNode):
     def __init__(self, field_decl_list):
         super().__init__()
         self.field_decl_list = field_decl_list
 
 
-class RangeTypeNode(TypeNode):
+class RangeTypeNode(AstNode):
     def __init__(self, num1,const_value1,num2,const_value2):
         self.num1 = num1
         self.const_value1 = const_value1
