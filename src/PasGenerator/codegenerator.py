@@ -11,15 +11,22 @@ from PasAnalyzer.vari import *
 from gentable import GenTable
 import llvmlite.ir as ir
 import llvmlite.binding as llvm
+from ctypes import CFUNCTYPE, c_double, c_int, c_void_p, cast, c_int32
+
+def wirte(data):
+    print(data)
+def read():
+    data=int(input())
+    return data
+
 class CodeGenerator(object):
     def __init__(self, module_name):
         self.module = ir.Module(module_name)
-        self.builder = None
         self.GenTable = GenTable()
         self.scope_id = 0
 
-    def generate(self, ast):
-        pass
+    def generate(self, ast_node):
+        return self._codegen_(ast_node,None)
 
     def type_convert(self,type):
         if(isinstance(type,ir.Type)):
@@ -51,10 +58,56 @@ class CodeGenerator(object):
         if (ast_node is None):
             return
         return getattr(self, '_codegen_' + ast_node.__class__.__name__)(ast_node, builder)
+    def register_writeln(self):
+        write_type = ir.FunctionType(ir.VoidType(), ir.IntType(32))
+        c_write_type = CFUNCTYPE(c_void_p, c_int32)
+        c_write = c_write_type(wirte)
+        write_address = cast(c_write, c_void_p).value
+
+        write_func_type=ir.FunctionType(ir.VoidType(),(ir.IntType(32),))
+        write_func=ir.Function(self.module,write_func_type,'writeln')
+        builder=ir.IRBuilder(write_func.append_basic_block('entry'))
+        write_f=builder.inttoptr(builder.constant(ir.IntType(64),write_address),
+                             write_func_type.as_pointer(),name='write_f')
+        arg=write_f.args[0]
+        arg.name='arg0'
+        call=builder.call(write_f,[arg])
+        builder.ret_void()
+
+        self.GenTable.add_function(func_name='writeln',func_block=write_func,scope_id=self.scope_id)
+
+    def register_readln(self):
+        read_type = ir.FunctionType(ir.VoidType(), ir.IntType(32))
+        c_read_type = CFUNCTYPE(c_void_p, c_int32)
+        c_read = c_read_type(wirte)
+        read_address = cast(c_read, c_void_p).value
+
+        read_func_type = ir.FunctionType(ir.VoidType(), (ir.IntType(32),))
+        read_func = ir.Function(self.module, read_func_type, 'readln')
+        builder = ir.IRBuilder(read_func.append_basic_block('entry'))
+        read_f = builder.inttoptr(builder.constant(ir.IntType(64), read_address),
+                                   read_func_type.as_pointer(), name='read_f')
+        arg = read_f.args[0]
+        arg.name = 'arg0'
+        call = builder.call(read_f, [arg])
+        builder.ret_void()
+
+        self.GenTable.add_function(func_name='readln', func_block=read_func, scope_id=self.scope_id)
 
     def _codegen_ProgramNode(self, ast_node, builder):
-        # TODO  program_head  routine
-        pass
+        self.register_writeln()
+        self.register_readln()
+
+        global_func_type=ir.FunctionType(ir.VoidType(),())
+        self.global_func=ir.Function(self.module,global_func_type,'global_func')
+
+        builder=ir.IRBuilder(self.global_func.append_basic_block('global_block'))
+
+        if(ast_node.routine):
+            self._codegen_(ast_node.routine,builder)
+        builder.ret_void()
+
+
 
     def _codegen_RoutineNode(self, ast_node, builder):
         # routine_head routine_body
@@ -215,7 +268,7 @@ class CodeGenerator(object):
 
     def _codegen_ProcedureDeclNode(self,ast_node,builder):
         #function_head sub_routine
-        gen_type='function'
+        gen_type='Procedure'
         self.scope_id+=1
         func_para_name=[]
         func_para_type=[]
@@ -242,9 +295,3 @@ class CodeGenerator(object):
         self.scope_id-=1
         return proto
 
-    def _codegen_CaseExprNode(self,ast_node,builder):
-        pass
-
-    def _codegen_BinaryExprNode(self,ast_node,builder):
-        if ast_node.op == ':=':
-            pass
