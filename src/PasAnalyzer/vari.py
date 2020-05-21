@@ -1,4 +1,5 @@
 from PasAnalyzer.AST import AstNode
+#---------------------------------VariableNode-------------------------
 class VariableNode(AstNode):
     def __init__(self, _id):
         super().__init__()

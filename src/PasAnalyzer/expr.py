@@ -1,5 +1,5 @@
 from PasAnalyzer.AST import AstNode
-#---------------------------------expressionNode-------------------------
+#---------------------------------ExpressionNode-------------------------
 class ConstExprNode(AstNode):
     def __init__(self, _id, const_value):
         super().__init__()

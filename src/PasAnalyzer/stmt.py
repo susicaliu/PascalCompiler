@@ -1,4 +1,5 @@
 from PasAnalyzer.AST import AstNode
+#---------------------------------StatementNode-------------------------
 class StmtNode(AstNode):
     def __init__(self,stmt,_id = None):
         super().__init__()
