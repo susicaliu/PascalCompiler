@@ -1,7 +1,13 @@
 import ply.yacc as yacc
 import os
-from lex import tokens,log
-from AST import *
+from PasScanner.lex import tokens,log
+from PasAnalyzer.AST import *
+from PasAnalyzer.expr import *
+from PasAnalyzer.rout import *
+from PasAnalyzer.list import *
+from PasAnalyzer.stmt import *
+from PasAnalyzer.type import *
+from PasAnalyzer.vari import *
 
 def p_program(p):
     'program : program_head  routine  SYM_PERIOD'
@@ -550,9 +556,10 @@ visible = True
 print(result)
 if visible:
     f = open('parsetree.dot','w')
-    f.write('digraph g {\n');
+    f.write('digraph g {\n')
     result.vis(f)
-    f.write('}\n');
+    f.write('}\n')
+    f.close()
     os.system('dot -Tpng parsetree.dot -o parsetree.png')
 else:
     result.travle()
