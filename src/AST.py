@@ -26,9 +26,9 @@ class ProgramNode(AstNode):
 
 
 class ProgramHeadNode(AstNode):
-    def __init__(self, id):
+    def __init__(self, _id):
         super().__init__()
-        self.id = id
+        self.id = _id
 
 
 class RoutineNode(AstNode):
@@ -85,9 +85,9 @@ class RecordElementNode(AstNode):
 
 
 class ConstExprNode(AstNode):
-    def __init__(self, variable_node, const_value):
+    def __init__(self, _id, const_value):
         super().__init__()
-        self.variable_node = variable_node
+        self.id = _id
         self.const_value = const_value
 
 
@@ -101,7 +101,7 @@ class TypeDefinitionNode(AstNode):
 class ConstValueNode(AstNode):
     def __init__(self, ntype, value):
         super().__init__()
-        self.type = type
+        self.type = ntype
         self.value = value
 
 
@@ -148,16 +148,17 @@ class ProcedureHeadNode(AstNode):
 
 # -----------------------------------StmtNode-------------------------------------
 
+class StmtNode(AstNode):
+    def __init__(self,stmt,_id = None):
+        super().__init__()
+        self.id = _id
+        self.stmt_node = stmt
+
 class AssignStmtNode(AstNode):
     def __init__(self, element_node, expression):
         super().__init__()
         self.expression = expression
         self.element_node = element_node
-        self.id=None
-
-    def set_id(self, id):
-        self.id=id
-
 
 class IfStmtNode(AstNode):
     def __init__(self, expression, stmt, else_clause):
@@ -165,63 +166,47 @@ class IfStmtNode(AstNode):
         self.expression = expression
         self.stmt = stmt
         self.else_clause = else_clause
-        self.id = None
-
-    def set_id(self, id):
-        self.id = id
 
 class RepeatStmtNode(AstNode):
     def __init__(self, stmt_list, expression):
         super().__init__()
         self.stmt_list = stmt_list
         self.expression = expression
-        self.id = None
-
-    def set_id(self, id):
-        self.id = id
 
 class WhileStmtNode(AstNode):
     def __init__(self, expression, stmt):
         super().__init__()
         self.expression = expression
         self.stmt = stmt
-        self.id = None
-
-    def set_id(self, id):
-        self.id = id
 
 class ForStmtNode(AstNode):
-    def __init__(self, id, expression1, direction, expression2, stmt):
+    def __init__(self, name, expression1, direction, expression2, stmt):
         super().__init__()
-        self.id = id
+        self.name = name
         self.expression1 = expression1
         self.direction = direction
         self.expression2 = expression2
         self.stmt = stmt
-        self.id = None
-
-    def set_id(self, id):
-        self.id = id
 
 class CaseStmtNode(AstNode):
     def __init__(self, expression, case_expr_list):
         super().__init__()
         self.expression = expression
         self.case_expr_list = case_expr_list
-        self.id = None
 
-    def set_id(self, id):
-        self.id = id
-# ---------------------------------expressionNode-------------------------
-
-class CallExprNode(AstNode):
-    def __init__(self, id, args_list):
+class GotoStmtNode(AstNode):
+    def __init__(self, num):
         super().__init__()
-        self.id = id
-        self.args_list = args_list
-    def set_id(self,id):
-        self.id=id
+        self.num = num
 
+class CallStmtNode(AstNode):
+    def __init__(self, name, args_list):
+        super().__init__()
+        self.func_name = name
+        self.args_list = args_list
+
+
+#---------------------------------expressionNode-------------------------
 class CaseExprNode(AstNode):
     def __init__(self, const_value, stmt):
         super().__init__()
@@ -245,7 +230,6 @@ class UnaryExprNode(AstNode):
 
 
 # --------------------------TypeDeclNode-------------------------------------
-
 class SimpleTypeDeclNode(AstNode):
     def __init__(self, type_name):
         super().__init__()
@@ -253,9 +237,9 @@ class SimpleTypeDeclNode(AstNode):
 
 
 class VariableTypeDeclNode(AstNode):
-    def __init__(self, id):
+    def __init__(self, _id):
         super().__init__()
-        self.id = id
+        self.id = _id
 
 
 class ArrayTypeDeclNode(AstNode):
@@ -365,11 +349,8 @@ class ArgsListNode(ListNode):
         super().__init__(node)
 
 
-class FunctionDeclListNode(ListNode):
-    def __init__(self,node):
+class RoutineDeclListNode(ListNode):
+    def __init__(self,node,_id):
         super().__init__(node)
+        self.id = _id
 
-
-class ProcedureDeclListNode(ListNode):
-    def __init__(self,node):
-        super().__init__(node)

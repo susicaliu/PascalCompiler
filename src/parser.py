@@ -105,7 +105,7 @@ def p_simple_type_decl_0(p):
 
 def p_simple_type_decl_1(p):
     'simple_type_decl : ID'
-    p[0] = VariableTypeDeclNode(p[1])
+    p[0] = VariableTypeDeclNode(p[1])###
 
 def p_simple_type_decl_2(p):
     'simple_type_decl : SYM_LPAREN  name_list  SYM_RPAREN '
@@ -125,16 +125,17 @@ def p_simple_type_decl_5(p):
 
 def p_simple_type_decl_6(p):
     'simple_type_decl : ID  SYM_RANGE  ID'
-    p[0] = RangeTypeDeclNode(1,p[1],1,p[3])
+    p[0] = RangeTypeDeclNode(1,p[1],1,p[3])###constvaluenode select
 
 def p_array_type_decl(p):
     'array_type_decl : PAS_ARRAY  SYM_LBRAC  simple_type_decl  SYM_RBRAC  PAS_OF  type_decl'
     p[0] = ArrayTypeDeclNode(p[3],p[6])
+    ###ERROR simple_type_decl可能有问题
 
 def p_record_type_decl(p):
     'record_type_decl : PAS_RECORD  field_decl_list  PAS_END'
     p[0] = RecordTypeDeclNode(p[2])
-
+    
 def p_field_decl_list_0(p):
     'field_decl_list : field_decl_list  field_decl'
     p[0] = p[1]
@@ -192,11 +193,11 @@ def p_routine_part_1(p):
 
 def p_routine_part_2(p):
     'routine_part : function_decl'
-    p[0] = FunctionDeclListNode(p[1]) ###
+    p[0] = RoutineDeclListNode(p[1],'func') 
 
 def p_routine_part_3(p):
     'routine_part : procedure_decl'
-    p[0] = ProcedureDeclListNode(p[1]) ###
+    p[0] = RoutineDeclListNode(p[1],'proc') 
 
 def p_routine_part_4(p):
     'routine_part : empty'
@@ -274,12 +275,11 @@ def p_stmt_list_1(p):
 
 def p_stmt_0(p):
     'stmt : INT  SYM_COLON  non_label_stmt'
-    p[0] = p[3]
-    p[0].set_id(p[1])###
+    p[0] = StmtNode(p[3],p[1])
 
 def p_stmt_1(p):
     'stmt : non_label_stmt'
-    p[0] = p[1]
+    p[0] = StmtNode(p[1],None)
 
 def p_non_label_stmt_0(p):
     'non_label_stmt : assign_stmt'
@@ -331,11 +331,11 @@ def p_assign_stmt_2(p):
 
 def p_proc_stmt_0(p):
     'proc_stmt : ID'
-    p[0] = CallExprNode(p[1],None)###
+    p[0] = CallStmtNode(p[1],None)###
 
 def p_proc_stmt_1(p):
     'proc_stmt : ID  SYM_LPAREN  args_list  SYM_RPAREN'
-    p[0] = CallExprNode(p[1],p[3])
+    p[0] = CallStmtNode(p[1],p[3])
 
 def p_proc_stmt_2(p):
     'proc_stmt : SYS_PROC'
@@ -343,11 +343,11 @@ def p_proc_stmt_2(p):
 
 def p_proc_stmt_3(p):
     'proc_stmt : SYS_PROC  SYM_LPAREN  expression_list  SYM_RPAREN'
-    p[0] = CallExprNode(p[1],p[3])
+    p[0] = CallStmtNode(p[1],p[3])
 
 def p_proc_stmt_4(p):
     'proc_stmt : PAS_READ  SYM_LPAREN  factor  SYM_RPAREN'
-    p[0] = CallExprNode(p[1],p[3])
+    p[0] = CallStmtNode(p[1],p[3])###factor must be id
 
 def p_if_stmt(p):
     'if_stmt : PAS_IF  expression  PAS_THEN  stmt  else_clause'
@@ -407,6 +407,7 @@ def p_case_expr_1(p):
 
 def p_goto_stmt(p):
     'goto_stmt : PAS_GOTO  INT'
+    p[0] = GotoStmtNode(p[2]);
     pass###
 
 def p_expression_list_0(p):
@@ -489,15 +490,15 @@ def p_factor_0(p):
 
 def p_factor_1(p):
     'factor : ID  SYM_LPAREN  args_list  SYM_RPAREN'
-    p[0] = CallExprNode(p[1],p[3])
+    p[0] = CallStmtNode(p[1],p[3])
 
 def p_factor_2(p):
     'factor : SYS_FUNCT'
-    p[0] = CallExprNode(p[1],None)
+    p[0] = CallStmtNode(p[1],None)
 
 def p_factor_3(p):
     'factor : SYS_FUNCT  SYM_LPAREN  args_list  SYM_RPAREN'
-    p[0] = CallExprNode(p[1],p[3])
+    p[0] = CallStmtNode(p[1],p[3])
 
 def p_factor_4(p):
     'factor : const_value'
@@ -535,8 +536,6 @@ def p_args_list_1(p):
 def p_empty(p):
     'empty : '
     p[0] = None
-
-
 parser = yacc.yacc()
 
 while True:

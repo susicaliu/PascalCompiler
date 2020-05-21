@@ -1,0 +1,33 @@
+    lex.py: 924:lex: tokens   = ['ID', 'INT', 'REAL', 'CHAR', 'STR', 'SYM_ADD', 'SYM_SUB', 'SYM_MUL', 'SYM_DIV', 'SYM_EQ', 'SYM_LT', 'SYM_GT', 'SYM_LBRAC', 'SYM_RBRAC', 'SYM_PERIOD', 'SYM_COMMA', 'SYM_COLON', 'SYM_SEMICOLON', 'SYM_AT', 'SYM_CARET', 'SYM_LPAREN', 'SYM_RPAREN', 'SYM_NE', 'SYM_LE', 'SYM_GE', 'SYM_ASSIGN', 'SYM_RANGE', 'PAS_PACKED', 'PAS_MOD', 'PAS_REPEAT', 'PAS_RECORD', 'PAS_PROGRAM', 'PAS_TYPE', 'PAS_PROCEDURE', 'PAS_AND', 'SYS_CON', 'PAS_DOWNTO', 'PAS_NIL', 'PAS_DEFAULT', 'PAS_VAR', 'PAS_WITH', 'PAS_CASE', 'PAS_IN', 'PAS_FOR', 'PAS_OR', 'PAS_SIZEOF', 'PAS_EXIT', 'PAS_DO', 'PAS_LABEL', 'PAS_GOTO', 'PAS_READ', 'PAS_CONST', 'PAS_FORWARD', 'PAS_TO', 'SYS_FUNCT', 'PAS_ELSE', 'PAS_FUNCTION', 'PAS_THEN', 'PAS_OF', 'PAS_DIV', 'PAS_CONTINUE', 'PAS_XOR', 'PAS_FILE', 'SYS_TYPE', 'PAS_NOT', 'PAS_SET', 'PAS_BEGIN', 'PAS_END', 'PAS_IF', 'PAS_UNTIL', 'PAS_ARRAY', 'PAS_BREAK', 'SYS_PROC', 'PAS_WHILE']
+    lex.py: 925:lex: literals = ''
+    lex.py: 926:lex: states   = {'INITIAL': 'inclusive'}
+    lex.py: 953:lex: Adding rule t_ID -> '[a-zA-Z_][a-zA-Z_0-9]*' (state 'INITIAL')
+    lex.py: 953:lex: Adding rule t_newline -> '\n+' (state 'INITIAL')
+    lex.py: 959:lex: Adding rule t_REAL -> '([0-9]+\.[0-9]+)|([0-9]+\.[0-9]+e{SIGN}?[0-9]+)|([0-9]+e{SIGN}?[0-9]+)' (state 'INITIAL')
+    lex.py: 959:lex: Adding rule t_CHAR -> ''([^']|\")'' (state 'INITIAL')
+    lex.py: 959:lex: Adding rule t_STR -> '\'[^']*\'' (state 'INITIAL')
+    lex.py: 959:lex: Adding rule t_INT -> '[0-9]+' (state 'INITIAL')
+    lex.py: 959:lex: Adding rule t_SYM_RANGE -> '\.\.' (state 'INITIAL')
+    lex.py: 959:lex: Adding rule t_SYM_ADD -> '\+' (state 'INITIAL')
+    lex.py: 959:lex: Adding rule t_SYM_SUB -> '\-' (state 'INITIAL')
+    lex.py: 959:lex: Adding rule t_SYM_MUL -> '\*' (state 'INITIAL')
+    lex.py: 959:lex: Adding rule t_SYM_LBRAC -> '\[' (state 'INITIAL')
+    lex.py: 959:lex: Adding rule t_SYM_RBRAC -> '\]' (state 'INITIAL')
+    lex.py: 959:lex: Adding rule t_SYM_PERIOD -> '\.' (state 'INITIAL')
+    lex.py: 959:lex: Adding rule t_SYM_CARET -> '\^' (state 'INITIAL')
+    lex.py: 959:lex: Adding rule t_SYM_LPAREN -> '\(' (state 'INITIAL')
+    lex.py: 959:lex: Adding rule t_SYM_RPAREN -> '\)' (state 'INITIAL')
+    lex.py: 959:lex: Adding rule t_SYM_NE -> '<>' (state 'INITIAL')
+    lex.py: 959:lex: Adding rule t_SYM_LE -> '<=' (state 'INITIAL')
+    lex.py: 959:lex: Adding rule t_SYM_GE -> '>=' (state 'INITIAL')
+    lex.py: 959:lex: Adding rule t_SYM_ASSIGN -> ':=' (state 'INITIAL')
+    lex.py: 959:lex: Adding rule t_SYM_DIV -> '/' (state 'INITIAL')
+    lex.py: 959:lex: Adding rule t_SYM_EQ -> '=' (state 'INITIAL')
+    lex.py: 959:lex: Adding rule t_SYM_LT -> '<' (state 'INITIAL')
+    lex.py: 959:lex: Adding rule t_SYM_GT -> '>' (state 'INITIAL')
+    lex.py: 959:lex: Adding rule t_SYM_COMMA -> ',' (state 'INITIAL')
+    lex.py: 959:lex: Adding rule t_SYM_COLON -> ':' (state 'INITIAL')
+    lex.py: 959:lex: Adding rule t_SYM_SEMICOLON -> ';' (state 'INITIAL')
+    lex.py: 959:lex: Adding rule t_SYM_AT -> '@' (state 'INITIAL')
+    lex.py: 966:lex: ==== MASTER REGEXS FOLLOW ====
+    lex.py: 975:lex: state 'INITIAL' : regex[0] = '(?P<t_ID>[a-zA-Z_][a-zA-Z_0-9]*)|(?P<t_newline>\n+)|(?P<t_REAL>([0-9]+\.[0-9]+)|([0-9]+\.[0-9]+e{SIGN}?[0-9]+)|([0-9]+e{SIGN}?[0-9]+))|(?P<t_CHAR>'([^']|\")')|(?P<t_STR>\'[^']*\')|(?P<t_INT>[0-9]+)|(?P<t_SYM_RANGE>\.\.)|(?P<t_SYM_ADD>\+)|(?P<t_SYM_SUB>\-)|(?P<t_SYM_MUL>\*)|(?P<t_SYM_LBRAC>\[)|(?P<t_SYM_RBRAC>\])|(?P<t_SYM_PERIOD>\.)|(?P<t_SYM_CARET>\^)|(?P<t_SYM_LPAREN>\()|(?P<t_SYM_RPAREN>\))|(?P<t_SYM_NE><>)|(?P<t_SYM_LE><=)|(?P<t_SYM_GE>>=)|(?P<t_SYM_ASSIGN>:=)|(?P<t_SYM_DIV>/)|(?P<t_SYM_EQ>=)|(?P<t_SYM_LT><)|(?P<t_SYM_GT>>)|(?P<t_SYM_COMMA>,)|(?P<t_SYM_COLON>:)|(?P<t_SYM_SEMICOLON>;)|(?P<t_SYM_AT>@)'
