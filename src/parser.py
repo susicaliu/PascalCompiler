@@ -8,7 +8,7 @@ def p_program(p):
 
 def p_program_head(p):
     'program_head : PAS_PROGRAM  ID  SYM_SEMICOLON'
-    p[0] = ProgramHeadNode(p[2])
+    p[0] = p[2]
 
 def p_routine(p):
     'routine : routine_head  routine_body'

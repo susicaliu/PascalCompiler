@@ -25,12 +25,6 @@ class ProgramNode(AstNode):
         self.program_head = program_head
 
 
-class ProgramHeadNode(AstNode):
-    def __init__(self, _id):
-        super().__init__()
-        self.id = _id
-
-
 class RoutineNode(AstNode):
     def __init__(self, routine_head, routine_body):
         super().__init__()
