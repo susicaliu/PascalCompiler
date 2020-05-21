@@ -1,4 +1,5 @@
 import ply.yacc as yacc
+import os
 from lex import tokens,log
 from AST import *
 
@@ -536,13 +537,22 @@ def p_args_list_1(p):
 def p_empty(p):
     'empty : '
     p[0] = None
+
 parser = yacc.yacc()
 
-while True:
-   try:
-       s = input('calc > ')
-   except EOFError:
-       break
-   if not s: continue
-   result = parser.parse(s)
-   print(result)
+try:
+    s = input('calc > ')
+except EOFError:
+    print('Error')
+
+result = parser.parse(s)
+visible = True
+print(result)
+if visible:
+    f = open('parsetree.dot','w')
+    f.write('digraph g {\n');
+    result.vis(f)
+    f.write('}\n');
+    os.system('dot -Tpng parsetree.dot -o parsetree.png')
+else:
+    result.travle()
