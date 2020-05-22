@@ -1,16 +1,20 @@
 from PasAnalyzer.AST import AstNode
-#---------------------------------RoutineNode-------------------------
+
+
+# ---------------------------------RoutineNode-------------------------
 class RoutineNode(AstNode):
     def __init__(self, routine_head, routine_body):
         super().__init__()
         self.routine_head = routine_head
         self.routine_body = routine_body
 
+
 class SubRoutineNode(AstNode):
     def __init__(self, routine_head, routine_body):
         super().__init__()
         self.routine_head = routine_head
         self.routine_body = routine_body
+
 
 class RoutineHeadNode(AstNode):
     def __init__(self, label_part, const_part, type_part, var_part, routine_part):
@@ -21,11 +25,13 @@ class RoutineHeadNode(AstNode):
         self.var_part = var_part
         self.routine_part = routine_part
 
+
 class FunctionDeclNode(AstNode):
     def __init__(self, function_head, sub_routine):
         super().__init__()
         self.function_head = function_head
         self.sub_routine = sub_routine
+
 
 class FunctionHeadNode(AstNode):
     def __init__(self, id, parameters, simple_type_decl):

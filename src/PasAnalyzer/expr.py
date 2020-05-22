@@ -1,11 +1,14 @@
 from PasAnalyzer.AST import AstNode
-#---------------------------------ExpressionNode-------------------------
+
+
+# ---------------------------------ExpressionNode-------------------------
 class ConstExprNode(AstNode):
     def __init__(self, _id, const_value):
         super().__init__()
         self.id = _id
         self.const_value = const_value
-        
+
+
 class CaseExprNode(AstNode):
     def __init__(self, const_value, stmt):
         super().__init__()

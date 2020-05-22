@@ -1,10 +1,13 @@
 from PasAnalyzer.AST import AstNode
+
+
 # --------------------------TypeNode-------------------------------------
 class TypeDefinitionNode(AstNode):
     def __init__(self, id, type_decl):
         super().__init__()
         self.id = id
         self.type_decl = type_decl
+
 
 class SimpleTypeDeclNode(AstNode):
     def __init__(self, type_name):
@@ -42,11 +45,13 @@ class RangeTypeDeclNode(AstNode):
         self.const_value1 = const_value1
         self.const_value2 = const_value2
 
+
 class VarDeclNode(AstNode):
     def __init__(self, name_list, type_decl):
         super().__init__()
         self.name_list = name_list
         self.type_decl = type_decl
+
 
 class FieldDeclNode(AstNode):
     def __init__(self, name_list, type_decl):
