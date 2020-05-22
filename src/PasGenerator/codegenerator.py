@@ -58,6 +58,7 @@ class CodeGenerator(object):
         if (ast_node is None):
             return
         return getattr(self, '_codegen_' + ast_node.__class__.__name__)(ast_node, builder)
+
     def register_writeln(self):
         write_type = ir.FunctionType(ir.VoidType(), ir.IntType(32))
         c_write_type = CFUNCTYPE(c_void_p, c_int32)
@@ -98,7 +99,7 @@ class CodeGenerator(object):
         self.register_writeln()
         self.register_readln()
 
-        global_func_type=ir.FunctionType(ir.VoidType(),())
+        global_func_type=self.GenTable.get_type(ast_node.type)
         self.global_func=ir.Function(self.module,global_func_type,'global_func')
 
         builder=ir.IRBuilder(self.global_func.append_basic_block('global_block'))
@@ -166,7 +167,8 @@ class CodeGenerator(object):
 
     def _codegen_ArrayElementNode(self,ast_node,builder):
         # id  expression_array
-        variable_addr,vairable_type=self.GenTable.get_variable_addr_type(ast_node.id)
+        variable_addr = self.GenTable.get_address(ast_node.id)
+        vairable_type = self.GenTable.get_type(ast_node.type)
         array_index=[]
         for index in ast_node.expression_array:
             if isinstance(index,VariableNode):
@@ -180,8 +182,10 @@ class CodeGenerator(object):
 
     def _codegen_RecordElementNode(self,ast_node,builder):
         #id id2
-        variable_addr= self.GenTable.get_record_variable_addr(ast_node.id,ast_node.id2)
+        variable_addr= self.GenTable.get_address(ast_node.id,ast_node.id2)
         return builder.load(variable_addr, name=ast_node.id2)
+
+
     def _codegen_ConstExprNode(self,ast_node,builder):
         #id const_value
         variable=self.add_new_variable(variable=ast_node.id,variable_type=ast_node.const_value.type,builder=builder)
@@ -197,36 +201,18 @@ class CodeGenerator(object):
         # type value
         return builder.constant(self.type_convert(ast_node.type),ast_node.value)
 
-    def _codegen_VarDeclNode(self, ast_node, builder):
-        # name_list type_decl
-        for name in ast_node.name_list.NodeList:
-            if(isinstance(ast_node.type_decl,VariableTypeDeclNode)):
-                type=self.GenTable.get_type(ast_node.type_decl.id)
-                address=self.add_new_variable(variable=name,variable_type=type,builder=builder)
-            else:
-                address = self.add_new_variable(variable=name, variable_type=ast_node.type_decl.id, builder=builder)
 
-        return address
 
-    def _codegen_FieldDeclNode(self, ast_node, builder):
-        # name_list type_decl
-        for name in ast_node.name_list.NodeList:
-            if (isinstance(ast_node.type_decl, VariableTypeDeclNode)):
-                type = self.GenTable.get_type(ast_node.type_decl.id)
-                address = self.add_new_variable(variable=name, variable_type=type, builder=builder)
-            else:
-                address = self.add_new_variable(variable=name, variable_type=ast_node.type_decl.id, builder=builder)
 
-        return address
     def _codegen_FunctionProto(self,proto,builder,func_para_name,func_para_type,func_return_type_list,gen_type):
         func_name=proto.id
         if(gen_type=='function'):
-            func_return_type = self.type_convert(proto.simple_type_decl.type_name )
+            func_return_type =self.GenTable.get_type(proto.simple_type_decl.type)
         else:
             func_return_type = self.type_convert('void')
         if(proto.parameters):
             for para_type_list in proto.parameters.NodeList:
-                type=self.type_convert(para_type_list.type.type_name)
+                type=self.GenTable.get_type(para_type_list.type)
                 func_para_type+=type*len(para_type_list.NodeList[0].NodeList)
                 func_para_name+=para_type_list.NodeList[0].NodeList
 
@@ -294,4 +280,70 @@ class CodeGenerator(object):
         self.GenTable.delete_scope(self.scope_id)
         self.scope_id-=1
         return proto
+
+    def _codegen_SimpleTypeDeclNode(self,ast_node,builder):
+        # type_name
+        type=self.GenTable.get_type(ast_node.type)
+        return type
+
+    def _codegen_VariableTypeDeclNode(self,ast_node,builder):
+        # id
+        type = self.GenTable.get_type(ast_node.id.type)
+        return type
+    def _codegen_ArrayTypeDeclNode(self,ast_node,builder):
+        #simple_type_decl type_decl
+
+        simple_type=self._codegen_(ast_node.simple_type_decl)
+        type=self._codegen_(ast_node.type_decl)
+
+        return simple_type,type
+
+    def _codegen_EnumTypeDeclNode(self, ast_node, builder):
+        #name_list
+        type = self.GenTable.get_type(ast_node.name_list.type)
+
+        return type
+
+    def _codegen_RecordTypeDeclNode(self, ast_node, builder):
+        #field_decl_list
+        type = self.GenTable.get_type(ast_node.field_decl_list.type)
+        return type
+
+    def _codegen_RangeTypeDeclNode(self, ast_node, builder):
+        #num1 const_value1 num2 const_value2
+        type= self.GenTable.get_type(ast_node.const_value1.type)
+        return type
+
+    def _codegen_VarDeclNode(self, ast_node, builder):
+        # name_list type_decl
+        for name in ast_node.name_list.NodeList:
+            if (isinstance(ast_node.type_decl, VariableTypeDeclNode)):
+                type = self.GenTable.get_type(ast_node.type_decl.type)
+                address = self.add_new_variable(variable=name, variable_type=type, builder=builder)
+            else:
+                address = self.add_new_variable(variable=name, variable_type=ast_node.type_decl.id, builder=builder)
+
+        return address
+
+    def _codegen_FieldDeclNode(self, ast_node, builder):
+        # name_list type_decl
+        for name in ast_node.name_list.NodeList:
+            if (isinstance(ast_node.type_decl, VariableTypeDeclNode)):
+                type = self.GenTable.get_type(ast_node.type_decl.type)
+                address = self.add_new_variable(variable=name, variable_type=type, builder=builder)
+            else:
+                address = self.add_new_variable(variable=name, variable_type=ast_node.type_decl.id, builder=builder)
+
+        return address
+
+
+
+
+
+
+
+
+
+
+
 
