@@ -1,5 +1,4 @@
 import sys
-
 sys.path.append("..")
 from PasAnalyzer.AST import *
 from PasAnalyzer.expr import *
@@ -13,17 +12,12 @@ from gentable import GenTable
 import llvmlite.ir as ir
 import llvmlite.binding as llvm
 from ctypes import CFUNCTYPE, c_double, c_int, c_void_p, cast, c_int32
-from random import randint
-
 
 def wirte(data):
     print(data)
-
-
 def read():
-    data = int(input())
+    data=int(input())
     return data
-
 
 class CodeGenerator(object):
     def __init__(self, module_name):
@@ -32,12 +26,12 @@ class CodeGenerator(object):
         self.scope_id = 0
 
     def generate(self, ast_node):
-        return self._codegen_(ast_node, None)
+        return self._codegen_(ast_node,None)
 
-    def type_convert(self, type):
-        if (isinstance(type, ir.Type)):
+    def type_convert(self,type):
+        if(isinstance(type,ir.Type)):
             return type
-        if (type in ['integer', 'int']):
+        if(type in ['integer','int']):
             return ir.IntType(32)
         if (type in ['real']):
             return ir.DoubleType()
@@ -49,17 +43,16 @@ class CodeGenerator(object):
             return ir.IntType(8)
         raise Exception('Error: invalid data type')
 
-    def add_new_variable(self, variable, variable_type, builder):
+    def add_new_variable(self,variable,variable_type,builder):
         with builder.goto_entry_block():
-            typ = self.type_convert(variable_type)
-            address = builder.alloca(typ, size=None, name=variable)
-            self.GenTable.add_variable(variable_name=variable, address=address, variable_type=typ,
-                                       scope_id=self.scope_id)
+            typ=self.type_convert(variable_type)
+            address=builder.alloca(typ, size=None, name=variable)
+            self.GenTable.add_variable(variable_name=variable,address=address,variable_type=typ,scope_id=self.scope_id)
         return address
 
-    def assign(self, variable, value, builder):
+    def assign(self,variable,value,builder):
         # Store value to pointer ptr.
-        return builder.store(variable, value)
+        return builder.store(variable,value)
 
     def _codegen_(self, ast_node, builder):
         if (ast_node is None):
@@ -72,17 +65,17 @@ class CodeGenerator(object):
         c_write = c_write_type(wirte)
         write_address = cast(c_write, c_void_p).value
 
-        write_func_type = ir.FunctionType(ir.VoidType(), (ir.IntType(32),))
-        write_func = ir.Function(self.module, write_func_type, 'writeln')
-        builder = ir.IRBuilder(write_func.append_basic_block('entry'))
-        write_f = builder.inttoptr(builder.constant(ir.IntType(64), write_address),
-                                   write_func_type.as_pointer(), name='write_f')
-        arg = write_f.args[0]
-        arg.name = 'arg0'
-        call = builder.call(write_f, [arg])
+        write_func_type=ir.FunctionType(ir.VoidType(),(ir.IntType(32),))
+        write_func=ir.Function(self.module,write_func_type,'writeln')
+        builder=ir.IRBuilder(write_func.append_basic_block('entry'))
+        write_f=builder.inttoptr(builder.constant(ir.IntType(64),write_address),
+                             write_func_type.as_pointer(),name='write_f')
+        arg=write_f.args[0]
+        arg.name='arg0'
+        call=builder.call(write_f,[arg])
         builder.ret_void()
 
-        self.GenTable.add_function(func_name='writeln', func_block=write_func, scope_id=self.scope_id)
+        self.GenTable.add_function(func_name='writeln',func_block=write_func,scope_id=self.scope_id)
 
     def register_readln(self):
         read_type = ir.FunctionType(ir.VoidType(), ir.IntType(32))
@@ -94,7 +87,7 @@ class CodeGenerator(object):
         read_func = ir.Function(self.module, read_func_type, 'readln')
         builder = ir.IRBuilder(read_func.append_basic_block('entry'))
         read_f = builder.inttoptr(builder.constant(ir.IntType(64), read_address),
-                                  read_func_type.as_pointer(), name='read_f')
+                                   read_func_type.as_pointer(), name='read_f')
         arg = read_f.args[0]
         arg.name = 'arg0'
         call = builder.call(read_f, [arg])
@@ -109,12 +102,13 @@ class CodeGenerator(object):
         global_func_type=self.GenTable.get_type(ast_node.type)
         self.global_func=ir.Function(self.module,global_func_type,'global_func')
 
+        builder=ir.IRBuilder(self.global_func.append_basic_block('global_block'))
 
-        builder = ir.IRBuilder(self.global_func.append_basic_block('global_block'))
-
-        if (ast_node.routine):
-            self._codegen_(ast_node.routine, builder)
+        if(ast_node.routine):
+            self._codegen_(ast_node.routine,builder)
         builder.ret_void()
+
+
 
     def _codegen_RoutineNode(self, ast_node, builder):
         # routine_head routine_body
@@ -166,26 +160,25 @@ class CodeGenerator(object):
 
         return res
 
-    def _codegen_VariableNode(self, ast_node, builder):
-        # id
-        variable_addr = self.GenTable.get_address(ast_node.id)
+    def _codegen_VariableNode(self,ast_node,builder):
+        #id
+        variable_addr=self.GenTable.get_variable_addr(ast_node.id)
         return builder.load(variable_addr, name=ast_node.id)
 
-    def _codegen_ArrayElementNode(self, ast_node, builder):
+    def _codegen_ArrayElementNode(self,ast_node,builder):
         # id  expression_array
         variable_addr = self.GenTable.get_address(ast_node.id)
         vairable_type = self.GenTable.get_type(ast_node.type)
         array_index=[]
-
         for index in ast_node.expression_array:
-            if isinstance(index, VariableNode):
-                val = self._codegen_(index, builder)
+            if isinstance(index,VariableNode):
+                val=self._codegen_(index,builder)
             else:
-                val = builder.constant(ir.IntType(32), index.value)
+                val=builder.constant(ir.IntType(32),index.value)
             array_index.append(val)
-        array_index.append(builder.constant(ir.IntType(32), 0))
-        address = builder.gep(variable_addr, array_index)
-        return builder.load(address, "array_element")
+        array_index.append(builder.constant(ir.IntType(32),0))
+        address=builder.gep(variable_addr,array_index)
+        return builder.load(address,"array_element")
 
     def _codegen_RecordElementNode(self,ast_node,builder):
         #id id2
@@ -204,86 +197,88 @@ class CodeGenerator(object):
         type=self._codegen_(ast_node.type_decl,builder)
         self.GenTable.add_type(variable_name=variable,variable_type=type,scope_id=self.scope_id)
 
-
     def _codegen_ConstValueNode(self, ast_node, builder):
         # type value
-        return builder.constant(self.type_convert(ast_node.type), ast_node.value)
+        return builder.constant(self.type_convert(ast_node.type),ast_node.value)
 
 
-    def _codegen_FunctionProto(self, proto, builder, func_para_name, func_para_type, func_return_type_list, gen_type):
-        func_name = proto.id
-        if (gen_type == 'function'):
-            func_return_type = self.GenTable.get_type(proto.simple_type_decl.type)
+
+
+    def _codegen_FunctionProto(self,proto,builder,func_para_name,func_para_type,func_return_type_list,gen_type):
+        func_name=proto.id
+        if(gen_type=='function'):
+            func_return_type =self.GenTable.get_type(proto.simple_type_decl.type)
         else:
             func_return_type = self.type_convert('void')
-        if (proto.parameters):
+        if(proto.parameters):
             for para_type_list in proto.parameters.NodeList:
-                type = self.GenTable.get_type(para_type_list.type)
-                func_para_type += type * len(para_type_list.NodeList[0].NodeList)
-                func_para_name += para_type_list.NodeList[0].NodeList
+                type=self.GenTable.get_type(para_type_list.type)
+                func_para_type+=type*len(para_type_list.NodeList[0].NodeList)
+                func_para_name+=para_type_list.NodeList[0].NodeList
 
-        func_type = ir.FunctionType(func_return_type, func_para_type)
-        func = ir.Function(self.module, func_type, func_name)
+        func_type=ir.FunctionType(func_return_type,func_para_type)
+        func=ir.Function(self.module,func_type,func_name)
         func_return_type_list.append(func_return_type)
         return func
 
-    def _codegen_FunctionDeclNode(self, ast_node, builder):
-        # function_head sub_routine
-        gen_type = 'function'
-        self.scope_id += 1
-        func_para_name = []
-        func_para_type = []
-        func_return_type_list = []
-        proto = self._codegen_FunctionProto(proto=ast_node.function_head, builder=builder,
-                                            func_para_name=func_para_name, func_para_type=func_para_type,
-                                            func_return_type_list=func_return_type_list, gen_type=gen_type)
-        func_name = ast_node.function_head.id
-        self.GenTable.add_function(func_name, proto, self.scope_id)
 
-        func_enrty = proto.append_basic_block('entry')
-        Builder = ir.IRBuilder(block=func_enrty)
-        for index, arg in enumerate(proto.args):
-            arg.name = func_para_name[index]
-            address = self.add_new_variable(variable=arg.name, variable_type=func_para_type[index], builder=Builder)
-            Builder.store(arg, address)
-        func_return_type = func_return_type_list[0]
+    def _codegen_FunctionDeclNode(self,ast_node,builder):
+        #function_head sub_routine
+        gen_type='function'
+        self.scope_id+=1
+        func_para_name=[]
+        func_para_type=[]
+        func_return_type_list=[]
+        proto=self._codegen_FunctionProto(proto=ast_node.function_head,builder=builder,
+                                          func_para_name=func_para_name,func_para_type=func_para_type,
+                                          func_return_type_list=func_return_type_list,gen_type=gen_type)
+        func_name=ast_node.function_head.id
+        self.GenTable.add_function(func_name,proto,self.scope_id)
+
+        func_enrty=proto.append_basic_block('entry')
+        Builder=ir.IRBuilder(block=func_enrty)
+        for index,arg in enumerate(proto.args):
+            arg.name=func_para_name[index]
+            address=self.add_new_variable(variable=arg.name,variable_type=func_para_type[index],builder=Builder)
+            Builder.store(arg,address)
+        func_return_type=func_return_type_list[0]
         return_address = self.add_new_variable(variable=func_name, variable_type=func_return_type, builder=Builder)
-        res = self._codegen_(ast_node.sub_routine, Builder)
+        res=self._codegen_(ast_node.sub_routine,Builder)
 
-        return_value = Builder.load(ptr=return_address, name=func_name)
+        return_value=Builder.load(ptr=return_address,name=func_name)
         Builder.ret(return_value)
 
         self.GenTable.delete_scope(self.scope_id)
-        self.scope_id -= 1
+        self.scope_id-=1
         return proto
 
-    def _codegen_ProcedureDeclNode(self, ast_node, builder):
-        # function_head sub_routine
-        gen_type = 'Procedure'
-        self.scope_id += 1
-        func_para_name = []
-        func_para_type = []
-        func_return_type_list = []
-        proto = self._codegen_FunctionProto(proto=ast_node.function_head, builder=builder,
-                                            func_para_name=func_para_name, func_para_type=func_para_type,
-                                            func_return_type_list=func_return_type_list, gen_type=gen_type)
-        func_name = ast_node.function_head.id
-        self.GenTable.add_function(func_name, proto, self.scope_id)
+    def _codegen_ProcedureDeclNode(self,ast_node,builder):
+        #function_head sub_routine
+        gen_type='Procedure'
+        self.scope_id+=1
+        func_para_name=[]
+        func_para_type=[]
+        func_return_type_list=[]
+        proto=self._codegen_FunctionProto(proto=ast_node.function_head,builder=builder,
+                                          func_para_name=func_para_name,func_para_type=func_para_type,
+                                          func_return_type_list=func_return_type_list,gen_type=gen_type)
+        func_name=ast_node.function_head.id
+        self.GenTable.add_function(func_name,proto,self.scope_id)
 
-        func_enrty = proto.append_basic_block('entry')
-        Builder = ir.IRBuilder(block=func_enrty)
-        for index, arg in enumerate(proto.args):
-            arg.name = func_para_name[index]
-            address = self.add_new_variable(variable=arg.name, variable_type=func_para_type[index], builder=Builder)
-            Builder.store(arg, address)
-        func_return_type = func_return_type_list[0]
+        func_enrty=proto.append_basic_block('entry')
+        Builder=ir.IRBuilder(block=func_enrty)
+        for index,arg in enumerate(proto.args):
+            arg.name=func_para_name[index]
+            address=self.add_new_variable(variable=arg.name,variable_type=func_para_type[index],builder=Builder)
+            Builder.store(arg,address)
+        func_return_type=func_return_type_list[0]
         return_address = self.add_new_variable(variable=func_name, variable_type=func_return_type, builder=Builder)
-        res = self._codegen_(ast_node.sub_routine, Builder)
+        res=self._codegen_(ast_node.sub_routine,Builder)
 
         Builder.ret_void()
 
         self.GenTable.delete_scope(self.scope_id)
-        self.scope_id -= 1
+        self.scope_id-=1
         return proto
 
     def _codegen_SimpleTypeDeclNode(self,ast_node,builder):
@@ -344,82 +339,11 @@ class CodeGenerator(object):
 
 
 
-    # -----------------------------------StmtNode-------------------------------------
-    def _codegen_AssignStmtNode(self, node, builder):
-        lhs = self._codegen_(node.element_node, builder)
-        rhs = self._codegen_(node.expression, builder)
-        builder.store(rhs, lhs)
 
-    def _codegen_IfStmtNode(self, node, builder):
-        pred = self.builder.icmp_signed('!=', self._codegen(node.expression), ir.Constant(ir.IntType(1), 0))
-        with self.builder.if_else(pred) as (then, otherwise):
-            with then:
-                self._codegen_(node.stmt, builder)
-            with otherwise:
-                self._codegen_(node.else_clause, builder)
 
-    def _codegen_RepeatStmtNode(self, node, builder):
-        ran = str(randint(0, 0x7FFFFFFF))
 
-        repeat_block = builder.append_basic_block("repeat_" + ran)
-        stmt = builder.append_basic_block("stmt_" + ran)
-        jumpout = builder.append_basic_block("jumpout" + ran)
 
-        builder.branch(repeat_block)
 
-        r_builder = ir.IRBuilder(repeat_block)
-        s_builder = ir.IRBuilder(stmt)
-        self._codegen_(node.stmt_list, s_builder)
-        end_expr = self._codegen_(node.expression, r_builder)
-        end_cond = builder.icmp_signed('==', end_expr, builder.constant(ir.IntType(1), 0))
-        r_builder.cbranch(end_cond, repeat_block, jumpout)
-        s_builder.branch(repeat_block)
 
-        builder.position_at_end(jumpout)
 
-    def _codegen_WhileStmtNode(self, node, builder):
-        ran = str(randint(0, 0x7FFFFFFF))
 
-        while_block = builder.append_basic_block("while_" + ran)
-        stmt = builder.append_basic_block("stmt_" + ran)
-        jumpout = builder.append_basic_block("jumpout" + ran)
-
-        builder.branch(while_block)
-
-        w_builder = ir.IRBuilder(while_block)
-        s_builder = ir.IRBuilder(stmt)
-        end_expr = self._codegen_(node.expression, w_builder)
-        end_cond = builder.icmp_signed('==', end_expr, builder.constant(ir.IntType(1), 0))
-        w_builder.cbranch(end_cond, while_block, jumpout)
-        self._codegen_(node.stmt, s_builder)
-        s_builder.branch(while_block)
-
-        builder.position_at_end(jumpout)
-
-    def _codegen_ForStmtNode(self, node, builder):
-        pass
-
-    def _codegen_CaseStmtNode(self, node, builder):
-        ran = str(randint(0, 0x7FFFFFFF))
-
-        expr = self._codegen_(node.expression, builder)
-        case_expr_list = self._codegen_((node.case_expr_list, builder))
-        default = self.builder.append_basic_block('default_' + ran)
-
-        case_part = builder.switch(expr, default)
-        for val, block in case_expr_list:
-            case_part.add_case(val, block)
-            c_builder = ir.IRBuilder(block)
-            c_builder.position_at_end(block)
-            c_builder.branch(default)
-
-        builder.position_at_end(default)
-
-    def _codegen_GotoStmtNode(self, node, builder):
-        block_id = node.num
-        builder.goto_block("goto_" + block_id)
-
-    def _codegen_CallStmtNode(self, node, builder):
-        fn = self.GenTable.get_func(node.name)
-        args = [self._codegen_(arg, builder) for arg in node.args_list]
-        return builder.call(fn, args, 'call_fn')
