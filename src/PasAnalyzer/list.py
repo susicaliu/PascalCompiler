@@ -71,6 +71,11 @@ class ParaDeclListNode(ListNode):
 class NameListNode(ListNode):
     def __init__(self,node):
         super().__init__(node)
+    
+    def set_type(self,_type_name):
+        for var in self.NodeList:
+            if var is not None:
+                var.var_type = _type_name
 
 
 class StmtListNode(ListNode):

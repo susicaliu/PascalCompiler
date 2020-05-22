@@ -4,7 +4,8 @@ class AstNode(object):
     def __init__(self):
         super().__init__()
         self.cnt = 0
-
+        self.type = ''
+        
     def gattrs(self):
         return [i for i in dir(self) if not callable(getattr(self, i)) and not i.startswith('__')]
 
@@ -19,7 +20,10 @@ class AstNode(object):
     def dump(self, indent_num=0):
         return '{0}{1}'.format(
             ' ' * indent_num, self.__class__.__name__)
-        
+    
+    def type_check(self):
+        pass
+
     def vis(self, file):
         global treenode_tot
         treenode_tot += 1

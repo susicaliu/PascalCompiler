@@ -75,7 +75,7 @@ class CodeGenerator(object):
         write_func_type = ir.FunctionType(ir.VoidType(), (ir.IntType(32),))
         write_func = ir.Function(self.module, write_func_type, 'writeln')
         builder = ir.IRBuilder(write_func.append_basic_block('entry'))
-        write_f = builder.inttoptr(builder.constant(ir.IntType(64), write_address),
+        write_f = builder.inttoptr(ir.Constant(ir.IntType(64), write_address),
                                    write_func_type.as_pointer(), name='write_f')
         arg = write_f.args[0]
         arg.name = 'arg0'
@@ -93,7 +93,7 @@ class CodeGenerator(object):
         read_func_type = ir.FunctionType(ir.VoidType(), (ir.IntType(32),))
         read_func = ir.Function(self.module, read_func_type, 'readln')
         builder = ir.IRBuilder(read_func.append_basic_block('entry'))
-        read_f = builder.inttoptr(builder.constant(ir.IntType(64), read_address),
+        read_f = builder.inttoptr(ir.Constant(ir.IntType(64), read_address),
                                   read_func_type.as_pointer(), name='read_f')
         arg = read_f.args[0]
         arg.name = 'arg0'
@@ -189,7 +189,7 @@ class CodeGenerator(object):
 
     def _codegen_RecordElementNode(self,ast_node,builder):
         #id id2
-        variable_addr= self.GenTable.get_address(ast_node.id,ast_node.id2)
+        variable_addr= self.GenTable.get_address(ast_node.id+'.'+ast_node.id2)####todo
         return builder.load(variable_addr, name=ast_node.id2)
 
 
@@ -295,11 +295,11 @@ class CodeGenerator(object):
         # id
         type = self.GenTable.get_type(ast_node.id.type)
         return type
+
     def _codegen_ArrayTypeDeclNode(self,ast_node,builder):
         #simple_type_decl type_decl
-
-        simple_type=self._codegen_(ast_node.simple_type_decl)
-        type=self._codegen_(ast_node.type_decl)
+        simple_type=self._codegen_(ast_node.simple_type_decl,builder)
+        type=self._codegen_(ast_node.type_decl,builder)
 
         return simple_type,type
 
@@ -351,8 +351,8 @@ class CodeGenerator(object):
         builder.store(rhs, lhs)
 
     def _codegen_IfStmtNode(self, node, builder):
-        pred = self.builder.icmp_signed('!=', self._codegen(node.expression), ir.Constant(ir.IntType(1), 0))
-        with self.builder.if_else(pred) as (then, otherwise):
+        pred = builder.icmp_signed('!=', self._codegen_(node.expression,builder), ir.Constant(ir.IntType(1), 0))
+        with builder.if_else(pred) as (then, otherwise):
             with then:
                 self._codegen_(node.stmt, builder)
             with otherwise:
@@ -403,8 +403,8 @@ class CodeGenerator(object):
         ran = str(randint(0, 0x7FFFFFFF))
 
         expr = self._codegen_(node.expression, builder)
-        case_expr_list = self._codegen_((node.case_expr_list, builder))
-        default = self.builder.append_basic_block('default_' + ran)
+        case_expr_list = self._codegen_(node.case_expr_list, builder)
+        default = builder.append_basic_block('default_' + ran)
 
         case_part = builder.switch(expr, default)
         for val, block in case_expr_list:
@@ -423,3 +423,222 @@ class CodeGenerator(object):
         fn = self.GenTable.get_func(node.name)
         args = [self._codegen_(arg, builder) for arg in node.args_list]
         return builder.call(fn, args, 'call_fn')
+
+    def _codegen_BinaryExprNode(self,ast_node,builder):
+            #>= > <= < = <> + - | * / % & 
+            ret = None
+            if ast_node.op == '>=':
+                ret = self._codegen_CompExpr(ast_node,builder)
+            elif ast_node.op == '>':
+                ret = self._codegen_CompExpr(ast_node,builder)
+            elif ast_node.op == '<=':
+                ret = self._codegen_CompExpr(ast_node,builder)
+            elif ast_node.op == '<':
+                ret = self._codegen_CompExpr(ast_node,builder)
+            elif ast_node.op == '==':
+                ret = self._codegen_CompExpr(ast_node,builder)
+            elif ast_node.op == '!=':
+                ret = self._codegen_CompExpr(ast_node,builder)
+            elif ast_node.op == '+':
+                ret = self._codegen_AddExpr(ast_node,builder)
+            elif ast_node.op == '-':
+                ret = self._codegen_SubExpr(ast_node,builder)
+            elif ast_node.op == '|':
+                ret = self._codegen_OrExpr(ast_node,builder)
+            elif ast_node.op == '*':
+                ret = self._codegen_MulExpr(ast_node,builder)
+            elif ast_node.op == '/':
+                ret = self._codegen_DivExpr(ast_node,builder)
+            elif ast_node.op == '%':
+                ret = self._codegen_ModExpr(ast_node,builder)
+            elif ast_node.op == '&':
+                ret = self._codegen_AndExpr(ast_node,builder)
+            else:
+                pass ####error
+            return ret
+
+    def _type_cast(self,lhs,rhs):
+        if lhs.type == 'real' or rhs.type == 'real':
+            return 'real'
+        else:
+            return 'int'
+
+    def _codegen_CompExpr(self,ast_node,builder):
+        ret = None
+        lhs = self._codegen_(ast_node.lexpr,builder)
+        rhs = self._codegen_(ast_node.rexpr,builder)
+        _type = self._type_cast(ast_node.lexpr,ast_node.rexpr)
+        if _type == 'int':
+            ret = builder.icmp_signed(ast_node.op,lhs,rhs)
+        elif _type == 'real':
+            ret = builder.fcmp_signed(ast_node.op,lhs,rhs)
+        else:
+            pass ####error
+        return ret
+
+    def _codegen_AddExpr(self,ast_node,builder):
+        ret = None
+        lhs = self._codegen_(ast_node.lexpr,builder)
+        rhs = self._codegen_(ast_node.rexpr,builder)
+        if ast_node.type == 'int':
+            ret = builder.add(lhs,rhs)
+        elif ast_node.type == 'real':
+            ret = builder.fadd(lhs,rhs)
+        else:
+            pass ####error
+        return ret
+
+    def _codegen_SubExpr(self,ast_node,builder):
+        ret = None
+        lhs = self._codegen_(ast_node.lexpr,builder)
+        rhs = self._codegen_(ast_node.rexpr,builder)
+        if ast_node.type == 'int':
+            ret = builder.sub(lhs,rhs)
+        elif ast_node.type == 'real':
+            ret = builder.fsub(lhs,rhs)
+        else:
+            pass ####error
+        return ret
+
+    def _codegen_OrExpr(self,ast_node,builder):
+        ret = None
+        lhs = self._codegen_(ast_node.lexpr,builder)
+        rhs = self._codegen_(ast_node.rexpr,builder)
+        if ast_node.type == 'bool':
+            ret = builder.or_(lhs,rhs)
+        else:
+            pass ####error
+        return ret
+
+    def _codegen_MulExpr(self,ast_node,builder):
+        ret = None
+        lhs = self._codegen_(ast_node.lexpr,builder)
+        rhs = self._codegen_(ast_node.rexpr,builder)
+        if ast_node.type == 'int':
+            ret = builder.mul(lhs,rhs)
+        elif ast_node.type == 'real':
+            ret = builder.fmul(lhs,rhs)
+        else:
+            pass ####error
+        return ret
+
+    def _codegen_DivExpr(self,ast_node,builder):
+        ret = None
+        lhs = self._codegen_(ast_node.lexpr,builder)
+        rhs = self._codegen_(ast_node.rexpr,builder)
+        if ast_node.type == 'int':
+            ret = builder.div(lhs,rhs)
+        elif ast_node.type == 'real':
+            ret = builder.fdiv(lhs,rhs)
+        else:
+            pass ####error
+        return ret
+
+    def _codegen_ModExpr(self,ast_node,builder):
+        ret = None
+        lhs = self._codegen_(ast_node.lexpr,builder)
+        rhs = self._codegen_(ast_node.rexpr,builder)
+        if ast_node.type == 'int':
+            ret = builder.rem(lhs,rhs)
+        elif ast_node.type == 'real':
+            ret = builder.frem(lhs,rhs)
+        else:
+            pass ####error
+        return ret
+
+    def _codegen_AndExpr(self,ast_node,builder):
+        ret = None
+        lhs = self._codegen_(ast_node.lexpr,builder)
+        rhs = self._codegen_(ast_node.rexpr,builder)
+        if ast_node.type == 'bool':
+            ret = builder.and_(lhs,rhs)
+        else:
+            pass ####error
+        return ret
+
+    def _codegen_ConstExprNode(self,ast_node,builder):
+        ret = None
+        lhs = self._codegen_(ast_node.id,builder)
+        rhs = self._codegen_(ast_node.const_value,builder)
+        ret = builder.store(rhs,lhs)
+        return ret
+
+    def _codegen_get_lhs(self,ast_node,builder):
+        ret = None
+        return ret ####todo
+        
+    def _codegen_CaseExprNode(self,ast_node,builder):
+        ret = None
+        rand = randint(0,0x7FFFFFFF)
+        val = self._codegen_get_lhs(ast_node.id,builder)
+        tmp_block = builder.append_basic_block('case_'+str(rand))
+        tmp_builder = ir.IRBuilder(tmp_block)
+        self._codegen_(ast_node.stmt,tmp_builder)
+        return val, tmp_block####  
+
+    def _codegen_UnaryExprNode(self,ast_node,builder):
+        ret = None
+        val = self._codegen_(ast_node.factor,builder)
+        if ast_node.op == '!':
+            ret = builder.not_(val)
+        elif ast_node.op == '-':
+            ret = builder.neg(val)
+        else:
+            pass ####error
+        return ret
+    
+    def _codegen_ListNode(self,ast_node,builder):
+        ret = None
+        for son in ast_node.NodeList:
+            if son in ast_node.NodeList:
+                if son is not None:
+                    ret = self._codegen_(son,builder)
+        return ret
+
+    def _codegen_ConstExprListNode(self,ast_node,builder):
+        ret = self._codegen_ListNode(ast_node,builder)
+        return ret
+
+    def _codegen_TypeDeclListNode(self,ast_node,builder):
+        ret = self._codegen_ListNode(ast_node,builder)
+        return ret
+
+    def _codegen_FieldDeclListNode(self,ast_node,builder):
+        ret = self._codegen_ListNode(ast_node,builder)
+        return ret
+
+    def _codegen_VarDeclListNode(self,ast_node,builder):
+        ret = self._codegen_ListNode(ast_node,builder)
+        return ret
+
+    def _codegen_ParaTypeListNode(self,ast_node,builder):
+        ret = self._codegen_ListNode(ast_node,builder)
+        return ret
+
+    def _codegen_ParaDeclListNode(self,ast_node,builder):
+        ret = self._codegen_ListNode(ast_node,builder)
+        return ret
+
+    def _codegen_NameListNode(self,ast_node,builder):
+        ret = self._codegen_ListNode(ast_node,builder)
+        return ret
+    
+    def _codegen_StmtListNode(self,ast_node,builder):
+        ret = self._codegen_ListNode(ast_node,builder)
+        return ret
+    
+    def _codegen_CaseExprListNode(self,ast_node,builder):
+        ret = self._codegen_ListNode(ast_node,builder)
+        return ret
+    
+    def _codegen_ExprListNode(self,ast_node,builder):
+        ret = self._codegen_ListNode(ast_node,builder)
+        return ret
+    
+    def _codegen_ArgsListNode(self,ast_node,builder):
+        ret = self._codegen_ListNode(ast_node,builder)
+        return ret
+
+    def _codegen_RoutineDeclListNode(self,ast_node,builder):
+        ret = self._codegen_ListNode(ast_node,builder)
+        return ret

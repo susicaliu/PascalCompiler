@@ -38,10 +38,8 @@ class RecordTypeDeclNode(AstNode):
 
 
 class RangeTypeDeclNode(AstNode):
-    def __init__(self, num1, const_value1, num2, const_value2):
-        self.num1 = num1
+    def __init__(self, const_value1, const_value2):
         self.const_value1 = const_value1
-        self.num2 = num2
         self.const_value2 = const_value2
 
 class VarDeclNode(AstNode):

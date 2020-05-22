@@ -1,9 +1,10 @@
 from PasAnalyzer.AST import AstNode
 #---------------------------------VariableNode-------------------------
 class VariableNode(AstNode):
-    def __init__(self, _id):
+    def __init__(self, _id, _var_type):
         super().__init__()
         self.id = _id
+        self.var_type = _var_type
 
 class ArrayElementNode(AstNode):
     def __init__(self, _id, expression_array):
@@ -20,5 +21,11 @@ class RecordElementNode(AstNode):
 class ConstValueNode(AstNode):
     def __init__(self, ntype, value):
         super().__init__()
-        self.type = ntype
+        if value == 'true' or value == 'false':
+            self.type = 'bool'
+        else:
+            self.type = ntype
         self.value = value
+    
+    def reverse(self):
+        self.value = -self.value

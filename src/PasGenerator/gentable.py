@@ -77,7 +77,11 @@ class GenTable(object):
         else:
             raise Exception("Error: {0} is not exist!".format(name))
         return res
-
+    
+    def get_address(self,_id):
+        ret = None
+        return ret
+    
     def delete_scope(self, scope_id):
         for name in self.variable_scope.get(scope_id, []):
             res = self.variable_table.get(name)
@@ -93,5 +97,5 @@ class GenTable(object):
                 del res[-1]
             else:
                 raise Exception("Error: {0} is not exist!".format(name))
-        if self.func_scope.has_key(scope_id):
+        if scope_id in self.func_scope:
             del self.func_scope[scope_id]
