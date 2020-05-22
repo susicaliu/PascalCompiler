@@ -116,6 +116,7 @@ class CodeGenerator(object):
             self._codegen_(ast_node.routine, builder)
         builder.ret_void()
 
+    # ---------------------------------RoutineNode-------------------------
     def _codegen_RoutineNode(self, ast_node, builder):
         # routine_head routine_body
         res = None
@@ -166,6 +167,7 @@ class CodeGenerator(object):
 
         return res
 
+    # ---------------------------------VariableNode-------------------------
     def _codegen_VariableNode(self, ast_node, builder):
         # id
         variable_addr = self.GenTable.get_address(ast_node.id)
@@ -198,6 +200,8 @@ class CodeGenerator(object):
         variable=self.add_new_variable(variable=ast_node.id,variable_type=ast_node.const_value.type,builder=builder)
         value=self._codegen_(ast_node.const_value,builder)
         return self.assign(variable=variable,value=value,builder=builder)
+
+    # --------------------------TypeNode-------------------------------------
     def _codegen_TypeDefinitionNode(self,ast_node,builder):
         #id type_decl
         variable=ast_node.id
@@ -341,9 +345,6 @@ class CodeGenerator(object):
 
         return address
 
-
-
-
     # -----------------------------------StmtNode-------------------------------------
     def _codegen_AssignStmtNode(self, node, builder):
         lhs = self._codegen_(node.element_node, builder)
@@ -351,7 +352,7 @@ class CodeGenerator(object):
         builder.store(rhs, lhs)
 
     def _codegen_IfStmtNode(self, node, builder):
-        pred = builder.icmp_signed('!=', self._codegen_(node.expression,builder), ir.Constant(ir.IntType(1), 0))
+        pred = builder.icmp_signed('!=', self._codegen(node.expression), ir.Constant(ir.IntType(1), 0))
         with builder.if_else(pred) as (then, otherwise):
             with then:
                 self._codegen_(node.stmt, builder)
@@ -363,7 +364,7 @@ class CodeGenerator(object):
 
         repeat_block = builder.append_basic_block("repeat_" + ran)
         stmt = builder.append_basic_block("stmt_" + ran)
-        jumpout = builder.append_basic_block("jumpout" + ran)
+        jumpout = builder.append_basic_block("jumpout_" + ran)
 
         builder.branch(repeat_block)
 
@@ -382,7 +383,7 @@ class CodeGenerator(object):
 
         while_block = builder.append_basic_block("while_" + ran)
         stmt = builder.append_basic_block("stmt_" + ran)
-        jumpout = builder.append_basic_block("jumpout" + ran)
+        jumpout = builder.append_basic_block("jumpout_" + ran)
 
         builder.branch(while_block)
 
@@ -397,7 +398,48 @@ class CodeGenerator(object):
         builder.position_at_end(jumpout)
 
     def _codegen_ForStmtNode(self, node, builder):
-        pass
+        var_addr = self.add_new_variable(variable=node.name, variable_type=ir.IntType(32), builder=builder)
+        init_val = self._codegen_(node.expression1, builder)
+        final_val = self._codegen_(node.expression1, builder)
+        direction = node.direction.value  # int--> TO:1, DOWNTO: -1
+        builder.store(init_val, var_addr)
+
+        ran = str(randint(0, 0x7FFFFFFF))
+
+        for_block = builder.append_basic_block("for_" + ran)
+        f_builder = ir.IRBuilder(for_block)
+        stmt = f_builder.append_basic_block("stmt_" + ran)
+        jumpout = f_builder.append_basic_block("jumpout_" + ran)
+
+        builder.branch(for_block)
+
+        if direction == 1:
+            cmp = ">"
+        elif direction == -1:
+            cmp = "<"
+        cond = f_builder.icmp_signed(cmp, init_val, final_val)
+        f_builder.cbranch(cond, jumpout, stmt)
+        s_builder = ir.IRBuilder(stmt)
+        self._codegen_(node.stmt, s_builder)
+        if direction == 1:
+            current_val = s_builder.add(init_val, ir.IntType(32)(1))
+        elif direction == -1:
+            current_val = s_builder.sub(init_val, ir.IntType(32)(1))
+        s_builder.store(current_val, var_addr)
+        s_builder.branch(for_block)
+
+        builder.position_at_end(jumpout)
+
+    def _helper_gen_cmp_code(self, var_name, addr, target_val, step_dir, addit, builder):
+        cur_val = builder.load(addr, var_name)
+        if addit:
+            step_val = self._codegen(step_dir, builder)
+            cur_val = builder.add(cur_val, step_val)
+            self._codegen_do_assign(addr, cur_val, builder)
+        if step_dir > 0:
+            return builder.icmp_signed('<=', cur_val, target_val)
+        else:
+            return builder.icmp_signed('>=', cur_val, target_val)
 
     def _codegen_CaseStmtNode(self, node, builder):
         ran = str(randint(0, 0x7FFFFFFF))
@@ -424,8 +466,9 @@ class CodeGenerator(object):
         args = [self._codegen_(arg, builder) for arg in node.args_list]
         return builder.call(fn, args, 'call_fn')
 
+    # ---------------------------------ExpressionNode-------------------------
     def _codegen_BinaryExprNode(self,ast_node,builder):
-            #>= > <= < = <> + - | * / % & 
+            #>= > <= < = <> + - | * / % &
             ret = None
             if ast_node.op == '>=':
                 ret = self._codegen_CompExpr(ast_node,builder)
@@ -566,7 +609,7 @@ class CodeGenerator(object):
     def _codegen_get_lhs(self,ast_node,builder):
         ret = None
         return ret ####todo
-        
+
     def _codegen_CaseExprNode(self,ast_node,builder):
         ret = None
         rand = randint(0,0x7FFFFFFF)
@@ -574,7 +617,7 @@ class CodeGenerator(object):
         tmp_block = builder.append_basic_block('case_'+str(rand))
         tmp_builder = ir.IRBuilder(tmp_block)
         self._codegen_(ast_node.stmt,tmp_builder)
-        return val, tmp_block####  
+        return val, tmp_block####
 
     def _codegen_UnaryExprNode(self,ast_node,builder):
         ret = None
@@ -586,7 +629,8 @@ class CodeGenerator(object):
         else:
             pass ####error
         return ret
-    
+
+    # --------------------------ListNode-------------------------------------
     def _codegen_ListNode(self,ast_node,builder):
         ret = None
         for son in ast_node.NodeList:
@@ -622,19 +666,19 @@ class CodeGenerator(object):
     def _codegen_NameListNode(self,ast_node,builder):
         ret = self._codegen_ListNode(ast_node,builder)
         return ret
-    
+
     def _codegen_StmtListNode(self,ast_node,builder):
         ret = self._codegen_ListNode(ast_node,builder)
         return ret
-    
+
     def _codegen_CaseExprListNode(self,ast_node,builder):
         ret = self._codegen_ListNode(ast_node,builder)
         return ret
-    
+
     def _codegen_ExprListNode(self,ast_node,builder):
         ret = self._codegen_ListNode(ast_node,builder)
         return ret
-    
+
     def _codegen_ArgsListNode(self,ast_node,builder):
         ret = self._codegen_ListNode(ast_node,builder)
         return ret
