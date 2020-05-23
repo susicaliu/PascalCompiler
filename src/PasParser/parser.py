@@ -53,13 +53,13 @@ def p_const_expr_list_1(p):
     p[0] = ConstExprListNode(ConstExprNode(VariableNode(p[1],'const'),p[3])) ### constID
 
 def p_const_expr_list_2(p):
-    'const_expr_list : const_expr_list  ID  SYM_EQ  MINUS const_value  SYM_SEMICOLON'
+    'const_expr_list : const_expr_list  ID  SYM_EQ  SYM_SUB const_value  SYM_SEMICOLON'
     p[0] = p[1]
     p[5].reverse()
     p[0].append(ConstExprNode(VariableNode(p[2],'const'),p[5])) ### ConstID
 
 def p_const_expr_list_3(p):
-    'const_expr_list : ID  SYM_EQ  MINUS  const_value  SYM_SEMICOLON'
+    'const_expr_list : ID  SYM_EQ  SYM_SUB  const_value  SYM_SEMICOLON'
     p[4].reverse()
     p[0] = ConstExprListNode(ConstExprNode(VariableNode(p[1],'const'),p[4])) ### constID
 
