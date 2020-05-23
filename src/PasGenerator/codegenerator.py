@@ -65,7 +65,7 @@ class CodeGenerator(object):
         return getattr(self, '_codegen_' + ast_node.__class__.__name__)(ast_node, builder)
 
     def register_writeln(self):
-        write_type = ir.FunctionType(ir.VoidType(), ir.IntType(32))
+        write_type = ir.FunctionType(ir.VoidType(), (ir.IntType(32),))
         c_write_type = CFUNCTYPE(c_void_p, c_int32)
         c_write = c_write_type(wirte)
         write_address = cast(c_write, c_void_p).value
@@ -75,7 +75,7 @@ class CodeGenerator(object):
         builder = ir.IRBuilder(write_func.append_basic_block('entry'))
         write_f = builder.inttoptr(ir.Constant(ir.IntType(64), write_address),
                                    write_func_type.as_pointer(), name='write_f')
-        arg = write_f.args[0]
+        arg = write_func.args[0]
         arg.name = 'arg0'
         call = builder.call(write_f, [arg])
         builder.ret_void()
@@ -83,7 +83,7 @@ class CodeGenerator(object):
         self.GenTable.add_function(func_name='writeln', func_block=write_func, scope_id=self.scope_id)
 
     def register_readln(self):
-        read_type = ir.FunctionType(ir.VoidType(), ir.IntType(32))
+        read_type = ir.FunctionType(ir.VoidType(), (ir.IntType(32),))
         c_read_type = CFUNCTYPE(c_void_p, c_int32)
         c_read = c_read_type(wirte)
         read_address = cast(c_read, c_void_p).value
@@ -93,7 +93,7 @@ class CodeGenerator(object):
         builder = ir.IRBuilder(read_func.append_basic_block('entry'))
         read_f = builder.inttoptr(ir.Constant(ir.IntType(64), read_address),
                                   read_func_type.as_pointer(), name='read_f')
-        arg = read_f.args[0]
+        arg = read_func.args[0]
         arg.name = 'arg0'
         call = builder.call(read_f, [arg])
         builder.ret_void()
@@ -104,7 +104,7 @@ class CodeGenerator(object):
         self.register_writeln()
         self.register_readln()
 
-        global_func_type = self.GenTable.get_type(ast_node.type)
+        global_func_type = ir.FunctionType(ir.VoidType(), ())
         self.global_func = ir.Function(self.module, global_func_type, 'global_func')
 
         builder = ir.IRBuilder(self.global_func.append_basic_block('global_block'))
