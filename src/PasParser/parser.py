@@ -10,8 +10,8 @@ from PasAnalyzer.list import *
 from PasAnalyzer.stmt import *
 from PasAnalyzer.type import *
 from PasAnalyzer.vari import *
-from PasError.errors import *
-from PasError.warnings import *
+from PasError.myerrors import *
+from PasError.mywarnings import *
 
 def p_program(p):
     'program : program_head  routine  SYM_PERIOD'
