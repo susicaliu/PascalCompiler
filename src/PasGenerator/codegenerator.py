@@ -9,6 +9,8 @@ from PasAnalyzer.stmt import *
 from PasAnalyzer.type import *
 from PasAnalyzer.vari import *
 
+from PasParser.parser import *
+
 from gentable import GenTable
 import llvmlite.ir as ir
 import llvmlite.binding as llvm
@@ -63,7 +65,7 @@ class CodeGenerator(object):
         return getattr(self, '_codegen_' + ast_node.__class__.__name__)(ast_node, builder)
 
     def register_writeln(self):
-        write_type = ir.FunctionType(ir.VoidType(), ir.IntType(32))
+        write_type = ir.FunctionType(ir.VoidType(), (ir.IntType(32),))
         c_write_type = CFUNCTYPE(c_void_p, c_int32)
         c_write = c_write_type(wirte)
         write_address = cast(c_write, c_void_p).value
@@ -73,7 +75,7 @@ class CodeGenerator(object):
         builder = ir.IRBuilder(write_func.append_basic_block('entry'))
         write_f = builder.inttoptr(ir.Constant(ir.IntType(64), write_address),
                                    write_func_type.as_pointer(), name='write_f')
-        arg = write_f.args[0]
+        arg = write_func.args[0]
         arg.name = 'arg0'
         call = builder.call(write_f, [arg])
         builder.ret_void()
@@ -81,7 +83,7 @@ class CodeGenerator(object):
         self.GenTable.add_function(func_name='writeln', func_block=write_func, scope_id=self.scope_id)
 
     def register_readln(self):
-        read_type = ir.FunctionType(ir.VoidType(), ir.IntType(32))
+        read_type = ir.FunctionType(ir.VoidType(), (ir.IntType(32),))
         c_read_type = CFUNCTYPE(c_void_p, c_int32)
         c_read = c_read_type(wirte)
         read_address = cast(c_read, c_void_p).value
@@ -91,7 +93,7 @@ class CodeGenerator(object):
         builder = ir.IRBuilder(read_func.append_basic_block('entry'))
         read_f = builder.inttoptr(ir.Constant(ir.IntType(64), read_address),
                                   read_func_type.as_pointer(), name='read_f')
-        arg = read_f.args[0]
+        arg = read_func.args[0]
         arg.name = 'arg0'
         call = builder.call(read_f, [arg])
         builder.ret_void()
@@ -102,7 +104,7 @@ class CodeGenerator(object):
         self.register_writeln()
         self.register_readln()
 
-        global_func_type = self.GenTable.get_type(ast_node.type)
+        global_func_type = ir.FunctionType(ir.VoidType(), ())
         self.global_func = ir.Function(self.module, global_func_type, 'global_func')
 
         builder = ir.IRBuilder(self.global_func.append_basic_block('global_block'))
@@ -193,7 +195,7 @@ class CodeGenerator(object):
         # id const_value
         variable = self.add_new_variable(variable=ast_node.id, variable_type=ast_node.const_value.type, builder=builder)
         value = self._codegen_(ast_node.const_value, builder)
-        return builder.store(value,variable)
+        return builder.store(value, variable)
 
     # --------------------------TypeNode-------------------------------------
     def _codegen_TypeDefinitionNode(self, ast_node, builder):
@@ -344,7 +346,7 @@ class CodeGenerator(object):
         builder.store(rhs, lhs)
 
     def _codegen_IfStmtNode(self, node, builder):
-        pred = builder.icmp_signed('!=', self._codegen_(node.expression,builder), ir.Constant(ir.IntType(1), 0))
+        pred = builder.icmp_signed('!=', self._codegen_(node.expression, builder), ir.Constant(ir.IntType(1), 0))
         with builder.if_else(pred) as (then, otherwise):
             with then:
                 self._codegen_(node.stmt, builder)
@@ -678,3 +680,26 @@ class CodeGenerator(object):
     def _codegen_RoutineDeclListNode(self, ast_node, builder):
         ret = self._codegen_ListNode(ast_node, builder)
         return ret
+
+
+if __name__ == '__main__':
+    # All these initializations are required for code generation!
+    llvm.initialize()
+    llvm.initialize_native_target()
+    llvm.initialize_native_asmprinter()  # yes, even this one
+
+    codestr = open('test.pas', 'r').read()
+    print(codestr)
+    my_parser = parser
+    ast = my_parser.parse(codestr)
+
+    print("====================AST====================")
+    print(ast)
+    print("====================AST====================")
+
+    codegen = CodeGenerator('Test')
+    codegen.generate(ast)
+
+    print("====================IR====================")
+    print(str(codegen.module))
+    print("====================IR====================")

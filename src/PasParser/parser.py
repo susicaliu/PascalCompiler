@@ -578,20 +578,21 @@ def find_column(input, t):
 
 parser = yacc.yacc()
 
-try:
-    s = input('calc > ')
-except EOFError:
-    print('Error')
+if __name__ == '__main__':
+    try:
+        s = input('calc > ')
+    except EOFError:
+        print('Error')
 
-result = parser.parse(s)
-visible = True
-print(result)
-if visible:
-    f = open('parsetree.dot','w')
-    f.write('digraph g {\n')
-    result.vis(f)
-    f.write('}\n')
-    f.close()
-    os.system('dot -Tpng parsetree.dot -o parsetree.png')
-else:
-    result.travle()
+    result = parser.parse(s)
+    visible = True
+    print(result)
+    if visible:
+        f = open('parsetree.dot','w')
+        f.write('digraph g {\n')
+        result.vis(f)
+        f.write('}\n')
+        f.close()
+        os.system('dot -Tpng parsetree.dot -o parsetree.png')
+    else:
+        result.travle()
