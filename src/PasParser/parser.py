@@ -1,5 +1,7 @@
 import ply.yacc as yacc
 import os
+import sys
+sys.path.append("..")
 from PasScanner.lex import tokens,log
 from PasAnalyzer.AST import *
 from PasAnalyzer.expr import *
@@ -8,6 +10,8 @@ from PasAnalyzer.list import *
 from PasAnalyzer.stmt import *
 from PasAnalyzer.type import *
 from PasAnalyzer.vari import *
+from PasError.errors import *
+from PasError.warnings import *
 
 def p_program(p):
     'program : program_head  routine  SYM_PERIOD'
@@ -561,6 +565,16 @@ def p_args_list_1(p):
 def p_empty(p):
     'empty : '
     p[0] = None
+
+def p_error(p):
+    print("ERROR 0: Syntax error!", p)
+    raise SyntxError(["Syntax error: %s at line %d, col %d." % (p.value, p.lineno, find_column(p.lexer.lexdata,p))])
+
+def find_column(input, t):
+     line_start = input.rfind('\n', 0, t.lexpos) + 1
+     if line_start < 0:
+         line_start = 0
+     return (t.lexpos - line_start) + 1
 
 parser = yacc.yacc()
 
