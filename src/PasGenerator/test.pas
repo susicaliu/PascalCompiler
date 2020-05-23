@@ -7,10 +7,11 @@ var i,a,b,c,s: integer;
 function g1(x:integer):integer;
   var s:integer;
   function g2(x:integer):integer;
-    var s:integer;
+    var s,q:integer;
     begin
         s:=2;
-        g2:=1;
+        q:=3;
+        s:=s*q;
     end;
   begin
     s:=1;
