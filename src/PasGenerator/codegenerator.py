@@ -456,7 +456,7 @@ class CodeGenerator(object):
         builder.goto_block("goto_" + block_id)
 
     def _codegen_CallStmtNode(self, node, builder):
-        fn = self.GenTable.get_func(node.name)
+        fn = self.GenTable.get_func(node.func_name)
         args = [self._codegen_(arg, builder) for arg in node.args_list]
         return builder.call(fn, args, 'call_fn')
 
@@ -564,7 +564,7 @@ class CodeGenerator(object):
         lhs = self._codegen_(ast_node.lexpr, builder)
         rhs = self._codegen_(ast_node.rexpr, builder)
         if ast_node.type == 'int':
-            ret = builder.div(lhs, rhs)
+            ret = builder.sdiv(lhs, rhs)
         elif ast_node.type == 'real':
             ret = builder.fdiv(lhs, rhs)
         else:
@@ -576,7 +576,7 @@ class CodeGenerator(object):
         lhs = self._codegen_(ast_node.lexpr, builder)
         rhs = self._codegen_(ast_node.rexpr, builder)
         if ast_node.type == 'int':
-            ret = builder.rem(lhs, rhs)
+            ret = builder.srem(lhs, rhs)
         elif ast_node.type == 'real':
             ret = builder.frem(lhs, rhs)
         else:
@@ -600,14 +600,10 @@ class CodeGenerator(object):
         ret = builder.store(rhs, lhs)
         return ret
 
-    def _codegen_get_lhs(self, ast_node, builder):
-        ret = None
-        return ret  ####todo
-
     def _codegen_CaseExprNode(self, ast_node, builder):
         ret = None
         rand = randint(0, 0x7FFFFFFF)
-        val = self._codegen_get_lhs(ast_node.id, builder)
+        val = self._codegen_(ast_node.const_value, builder)
         tmp_block = builder.append_basic_block('case_' + str(rand))
         tmp_builder = ir.IRBuilder(tmp_block)
         self._codegen_(ast_node.stmt, tmp_builder)
