@@ -9,6 +9,8 @@ from PasAnalyzer.stmt import *
 from PasAnalyzer.type import *
 from PasAnalyzer.vari import *
 
+from PasParser.parser import *
+
 from gentable import GenTable
 import llvmlite.ir as ir
 import llvmlite.binding as llvm
@@ -193,7 +195,7 @@ class CodeGenerator(object):
         # id const_value
         variable = self.add_new_variable(variable=ast_node.id, variable_type=ast_node.const_value.type, builder=builder)
         value = self._codegen_(ast_node.const_value, builder)
-        return builder.store(value,variable)
+        return builder.store(value, variable)
 
     # --------------------------TypeNode-------------------------------------
     def _codegen_TypeDefinitionNode(self, ast_node, builder):
@@ -344,7 +346,7 @@ class CodeGenerator(object):
         builder.store(rhs, lhs)
 
     def _codegen_IfStmtNode(self, node, builder):
-        pred = builder.icmp_signed('!=', self._codegen_(node.expression,builder), ir.Constant(ir.IntType(1), 0))
+        pred = builder.icmp_signed('!=', self._codegen_(node.expression, builder), ir.Constant(ir.IntType(1), 0))
         with builder.if_else(pred) as (then, otherwise):
             with then:
                 self._codegen_(node.stmt, builder)
@@ -678,3 +680,25 @@ class CodeGenerator(object):
     def _codegen_RoutineDeclListNode(self, ast_node, builder):
         ret = self._codegen_ListNode(ast_node, builder)
         return ret
+
+
+if __name__ == '__main__':
+    # All these initializations are required for code generation!
+    llvm.initialize()
+    llvm.initialize_native_target()
+    llvm.initialize_native_asmprinter()  # yes, even this one
+
+    s = input('codegen > ')
+    my_parser = parser
+    ast = my_parser.parse(s)
+    if not ast:
+        print("no asr")
+
+    print(ast)
+
+    codegen = CodeGenerator('Test')
+    codegen.generate(ast)
+
+    print("====================IR====================")
+    print(str(codegen.module))
+    print("====================IR====================")
