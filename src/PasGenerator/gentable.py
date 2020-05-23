@@ -1,3 +1,4 @@
+import llvmlite.ir as ir
 class GenTable(object):
     def __init__(self):
         self.variable_table = {}
@@ -25,9 +26,9 @@ class GenTable(object):
         self.variable_table.setdefault(key_name, {}).setdefault(variable_name, []).append((address, variable_type))
 
     def get_type(self, type_name):
-        res = self.type_table.get(type_name)
+        res = self.variable_table.get(type_name)
         if (res is not None):
-            res = res[-1]
+            res = res[-1][1]
         else:
             raise Exception("Error: {0} is not exist!".format(type_name))
         return res
@@ -56,12 +57,6 @@ class GenTable(object):
         else:
             raise Exception("Error: {0} is not exist!".format(name))
 
-    def get_variable_addr(self, name):
-        res = self.variable_table.get(name)
-        if (res is not None):
-            return res[-1][0]
-        else:
-            raise Exception("Error: {0} is not exist!".format(name))
 
     def get_variable_addr_type(self, name):
         res = self.variable_table.get(name)
@@ -79,8 +74,12 @@ class GenTable(object):
         return res
 
     def get_address(self, _id):
-        ret = self.get_variable_addr(_id)
-        return ret
+        res = self.variable_table.get(_id)
+        if (res is not None):
+            return res[-1][0]
+        else:
+            raise Exception("Error: {0} is not exist!".format(_id))
+
 
     def delete_scope(self, scope_id):
         for name in self.variable_scope.get(scope_id, []):
@@ -99,3 +98,18 @@ class GenTable(object):
                 raise Exception("Error: {0} is not exist!".format(name))
         if scope_id in self.func_scope:
             del self.func_scope[scope_id]
+
+    def type_convert(self, type):
+        if (isinstance(type, ir.Type)):
+            return type
+        if (type in ['integer', 'int']):
+            return ir.IntType(32)
+        if (type in ['real']):
+            return ir.DoubleType()
+        if (type in ['boolean']):
+            return ir.IntType(1)
+        if (type in ['void']):
+            return ir.VoidType()
+        if (type in ['char']):
+            return ir.IntType(8)
+        raise Exception('Error: invalid data type')

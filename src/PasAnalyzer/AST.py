@@ -76,7 +76,6 @@ class AstNode(object):
             return
         if v == '+':
             v = 'add'
-
         file.write('TN' + str(self.cnt) + '->BS' + str(basic_tot) + ';\n')
         file.write('BS' + str(basic_tot) + '[shape=oval,label=' + str(v) + '];\n')
 

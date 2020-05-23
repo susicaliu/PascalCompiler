@@ -493,9 +493,9 @@ class CodeGenerator(object):
         lhs = self.GenTable.get_address(ast_node.lexpr)
         rhs = self.GenTable.get_address(ast_node.rexpr)
         _type = self._type_cast(ast_node.lexpr, ast_node.rexpr)
-        if _type == 'int':
+        if isinstance(_type,ir.IntType):
             ret = builder.icmp_signed(ast_node.op, lhs, rhs)
-        elif _type == 'real':
+        elif isinstance(_type, ir.FloatType):
             ret = builder.fcmp_signed(ast_node.op, lhs, rhs)
         else:
             pass  ####error
@@ -506,7 +506,7 @@ class CodeGenerator(object):
         ret = None
         lhs = self.GenTable.get_address(ast_node.lexpr)
         rhs = self.GenTable.get_address(ast_node.rexpr)
-        addr, type =self.GenTable.get_variable_addr_type(ast_node.rexpr)
+        type=self.GenTable.get_type(ast_node.lexpr)
         if isinstance(type,ir.IntType):
             ret = builder.add(lhs, rhs)
         elif isinstance(type,ir.FloatType):
@@ -519,19 +519,21 @@ class CodeGenerator(object):
         ret = None
         lhs = self.GenTable.get_address(ast_node.lexpr)
         rhs = self.GenTable.get_address(ast_node.rexpr)
-        if ast_node.type == 'int':
+        type = self.GenTable.get_type(ast_node.lexpr)
+        if isinstance(type,ir.IntType):
             ret = builder.sub(lhs, rhs)
-        elif ast_node.type == 'real':
+        elif isinstance(type, ir.FloatType):
             ret = builder.fsub(lhs, rhs)
         else:
-            pass  ####error
+            pass
         return ret
 
     def _codegen_OrExpr(self, ast_node, builder):
         ret = None
         lhs = self.GenTable.get_address(ast_node.lexpr)
         rhs = self.GenTable.get_address(ast_node.rexpr)
-        if ast_node.type == 'bool':
+        type = self.GenTable.get_type(ast_node.lexpr)
+        if isinstance(type,ir.IntType):
             ret = builder.or_(lhs, rhs)
         else:
             pass  ####error
@@ -541,11 +543,7 @@ class CodeGenerator(object):
         ret = None
         lhs = self.GenTable.get_address(ast_node.lexpr)
         rhs = self.GenTable.get_address(ast_node.rexpr)
-        if ast_node.type == 'int':
-            ret = builder.mul(lhs, rhs)
-        elif ast_node.type == 'real':
-            ret = builder.fmul(lhs, rhs)
-        else:
+        type = self.GenTable.get_type(ast_node.lexpr)
             pass  ####error
         return ret
 
@@ -553,9 +551,10 @@ class CodeGenerator(object):
         ret = None
         lhs = self.GenTable.get_address(ast_node.lexpr)
         rhs = self.GenTable.get_address(ast_node.rexpr)
-        if ast_node.type == 'int':
+        type = self.GenTable.get_type(ast_node.lexpr)
+        if isinstance(type, ir.IntType):
             ret = builder.sdiv(lhs, rhs)
-        elif ast_node.type == 'real':
+        elif isinstance(type, ir.FloatType):
             ret = builder.fdiv(lhs, rhs)
         else:
             pass  ####error
@@ -565,9 +564,10 @@ class CodeGenerator(object):
         ret = None
         lhs = self.GenTable.get_address(ast_node.lexpr)
         rhs = self.GenTable.get_address(ast_node.rexpr)
-        if ast_node.type == 'int':
+        type = self.GenTable.get_type(ast_node.lexpr)
+        if isinstance(type,ir.IntType):
             ret = builder.srem(lhs, rhs)
-        elif ast_node.type == 'real':
+        elif isinstance(type, ir.FloatType):
             ret = builder.frem(lhs, rhs)
         else:
             pass  ####error
@@ -577,7 +577,8 @@ class CodeGenerator(object):
         ret = None
         lhs = self.GenTable.get_address(ast_node.lexpr)
         rhs = self.GenTable.get_address(ast_node.rexpr)
-        if ast_node.type == 'bool':
+        type = self.GenTable.get_type(ast_node.lexpr)
+        if isinstance(type,ir.IntType):
             ret = builder.and_(lhs, rhs)
         else:
             pass  ####error
