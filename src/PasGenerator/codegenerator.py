@@ -40,14 +40,13 @@ class CodeGenerator(object):
 
     def add_new_variable(self, variable, variable_type, builder):
         with builder.goto_entry_block():
-            typ = self.GenTable.type_convert(variable_type)
+            typ = self.type_convert(variable_type)
             address = builder.alloca(typ, size=None, name=variable)
             self.GenTable.add_variable(variable_name=variable, address=address, variable_type=typ,
                                        scope_id=self.scope_id)
         return address
 
     def _codegen_(self, ast_node, builder):
-        print(ast_node.__class__.__name__)
         if (ast_node is None):
             return
         print(ast_node.__class__.__name__)
@@ -162,7 +161,7 @@ class CodeGenerator(object):
     def _codegen_ArrayElementNode(self, ast_node, builder):
         # id  expression_array
         variable_addr = self.GenTable.get_address(ast_node.id)
-        vairable_type = self.GenTable.type_convert(ast_node.type)
+        vairable_type = self.type_convert(ast_node.type)
         array_index = []
 
         for index in ast_node.expression_array:
@@ -189,23 +188,23 @@ class CodeGenerator(object):
     # --------------------------TypeNode-------------------------------------
     def _codegen_TypeDefinitionNode(self, ast_node, builder):
         # id type_decl
-        variable = ast_node.id
+        variable = ast_node.id.id
         type = self._codegen_(ast_node.type_decl, builder)
         self.GenTable.add_type(variable_name=variable, variable_type=type, scope_id=self.scope_id)
 
     def _codegen_ConstValueNode(self, ast_node, builder):
         # type value
-        return ir.Constant(self.GenTable.type_convert(ast_node.type), ast_node.value)
+        return ir.Constant(self.type_convert(ast_node.type), ast_node.value)
     
     def _codegen_FunctionProto(self, proto, builder, func_para_name, func_para_type, func_return_type_list, gen_type):
         func_name = proto.id
         if (gen_type == 'function'):
-            func_return_type = self.GenTable.type_convert(proto.simple_type_decl.type)
+            func_return_type = self.type_convert(proto.simple_type_decl.type)
         else:
-            func_return_type = self.GenTable.type_convert('void')
+            func_return_type = self.type_convert('void')
         if (proto.parameters):
             for para_type_list in proto.parameters.NodeList:
-                type = self.GenTable.type_convert(para_type_list.type)
+                type = self.type_convert(para_type_list.type)
                 func_para_type += type * len(para_type_list.NodeList[0].NodeList)
                 func_para_name += para_type_list.NodeList[0].NodeList
 
@@ -275,12 +274,12 @@ class CodeGenerator(object):
 
     def _codegen_SimpleTypeDeclNode(self, ast_node, builder):
         # type_name
-        type = self.GenTable.type_convert(ast_node.type)
+        type = self.type_convert(ast_node.id) ####自定义type不能这样写
         return type
 
     def _codegen_VariableTypeDeclNode(self, ast_node, builder):
         # id
-        type = self.GenTable.type_convert(ast_node.id.type)
+        type = self.type_convert(ast_node.id.type)
         return type
 
     def _codegen_ArrayTypeDeclNode(self, ast_node, builder):
@@ -293,27 +292,29 @@ class CodeGenerator(object):
 
     def _codegen_EnumTypeDeclNode(self, ast_node, builder):
         # name_list
-        type = self.GenTable.type_convert(ast_node.name_list.type)
+        type = self.type_convert(ast_node.name_list.type)
 
         return type
 
     def _codegen_RecordTypeDeclNode(self, ast_node, builder):
         # field_decl_list
-        type = self.GenTable.type_convert(ast_node.field_decl_list.type)
+        type = self.type_convert(ast_node.field_decl_list.type)
         return type
 
     def _codegen_RangeTypeDeclNode(self, ast_node, builder):
-        # num1 const_value1 num2 const_value2
-        type = self.GenTable.type_convert(ast_node.const_value1.type)
-        return type
+        # const_value1 const_value2
+        num1 = ast_node.const_value1.value
+        num2 = ast_node.const_value2.value
+        return [int(num1),int(num2)]
 
     def _codegen_VarDeclNode(self, ast_node, builder):
         # name_list type_decl
         for name in ast_node.name_list.NodeList:
             if (isinstance(ast_node.type_decl, VariableTypeDeclNode)):
-                type = self.GenTable.type_convert(ast_node.type_decl.id)
+                type = self.GenTable.get_type(ast_node.type_decl.id)
                 address = self.add_new_variable(variable=name.id, variable_type=type, builder=builder)
             else:
+                print(name.id, ast_node.type_decl.id)
                 address = self.add_new_variable(variable=name.id, variable_type=ast_node.type_decl.id, builder=builder)
 
         return address
@@ -324,7 +325,7 @@ class CodeGenerator(object):
         for name in ast_node.name_list.NodeList:
 
             if (isinstance(ast_node.type_decl, VariableTypeDeclNode)):
-                type = self.GenTable.type_convert(ast_node.type_decl.id)
+                type = self.type_convert(ast_node.type_decl.id)
                 address = self.add_new_variable(variable=name.id, variable_type=type, builder=builder)
             else:
                 address = self.add_new_variable(variable=name.id, variable_type=ast_node.type_decl.id, builder=builder)
@@ -668,6 +669,20 @@ class CodeGenerator(object):
         ret = self._codegen_ListNode(ast_node, builder)
         return ret
 
+    def type_convert(self, type):
+        if (isinstance(type, ir.Type)):
+            return type
+        if (type in ['integer', 'int']):
+            return ir.IntType(32)
+        if (type in ['real']):
+            return ir.DoubleType()
+        if (type in ['boolean']):
+            return ir.IntType(1)
+        if (type in ['void']):
+            return ir.VoidType()
+        if (type in ['char']):
+            return ir.IntType(8)
+        raise Exception('Error: invalid data type')
 
 if __name__ == '__main__':
     # All these initializations are required for code generation!
