@@ -79,7 +79,7 @@ class GenTable(object):
         return res
 
     def get_address(self, _id):
-        ret = None
+        ret = self.get_variable_addr(_id)
         return ret
 
     def delete_scope(self, scope_id):

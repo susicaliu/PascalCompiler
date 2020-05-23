@@ -197,16 +197,16 @@ class CodeGenerator(object):
         return ir.Constant(self.type_convert(ast_node.type), ast_node.value)
     
     def _codegen_FunctionProto(self, proto, builder, func_para_name, func_para_type, func_return_type_list, gen_type):
-        func_name = proto.id
+        func_name = proto.id.id
         if (gen_type == 'function'):
-            func_return_type = self.type_convert(proto.simple_type_decl.type)
+            func_return_type = self.type_convert(proto.simple_type_decl.id)
         else:
             func_return_type = self.type_convert('void')
         if (proto.parameters):
             for para_type_list in proto.parameters.NodeList:
-                type = self.type_convert(para_type_list.type)
-                func_para_type += type * len(para_type_list.NodeList[0].NodeList)
-                func_para_name += para_type_list.NodeList[0].NodeList
+                type = self.type_convert(para_type_list.type.id)
+                func_para_type += [type] * len(para_type_list.NodeList[0].NodeList)
+                func_para_name += [var.id for var in para_type_list.NodeList[0].NodeList]
 
         func_type = ir.FunctionType(func_return_type, func_para_type)
         func = ir.Function(self.module, func_type, func_name)
@@ -223,7 +223,7 @@ class CodeGenerator(object):
         proto = self._codegen_FunctionProto(proto=ast_node.function_head, builder=builder,
                                             func_para_name=func_para_name, func_para_type=func_para_type,
                                             func_return_type_list=func_return_type_list, gen_type=gen_type)
-        func_name = ast_node.function_head.id
+        func_name = ast_node.function_head.id.id
         self.GenTable.add_function(func_name, proto, self.scope_id)
 
         func_enrty = proto.append_basic_block('entry')
@@ -443,7 +443,7 @@ class CodeGenerator(object):
 
     def _codegen_CallStmtNode(self, node, builder):
         fn = self.GenTable.get_func(node.func_name)
-        args = [self._codegen_(arg, builder) for arg in node.args_list]
+        args = [self._codegen_(arg, builder) for arg in node.args_list.NodeList]
         return builder.call(fn, args, 'call_fn')
 
     # ---------------------------------ExpressionNode-------------------------
