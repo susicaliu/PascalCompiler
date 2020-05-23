@@ -684,13 +684,14 @@ if __name__ == '__main__':
     llvm.initialize_native_target()
     llvm.initialize_native_asmprinter()  # yes, even this one
 
-    s = input('codegen > ')
+    codestr = open('test.pas', 'r').read()
+    print(codestr)
     my_parser = parser
-    ast = my_parser.parse(s)
-    if not ast:
-        print("no asr")
+    ast = my_parser.parse(codestr)
 
+    print("====================AST====================")
     print(ast)
+    print("====================AST====================")
 
     codegen = CodeGenerator('Test')
     codegen.generate(ast)
