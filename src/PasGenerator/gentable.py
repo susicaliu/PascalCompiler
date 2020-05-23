@@ -80,6 +80,7 @@ class GenTable(object):
         else:
             raise Exception("Error: {0} is not exist!".format(_id))
 
+
     def delete_scope(self, scope_id):
         for name in self.variable_scope.get(scope_id, []):
             res = self.variable_table.get(name)

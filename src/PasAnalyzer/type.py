@@ -42,6 +42,7 @@ class RecordTypeDeclNode(AstNode):
 
 class RangeTypeDeclNode(AstNode):
     def __init__(self, const_value1, const_value2):
+        super().__init__()
         self.const_value1 = const_value1
         self.const_value2 = const_value2
 

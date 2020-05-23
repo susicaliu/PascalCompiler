@@ -1,7 +1,6 @@
 treenode_tot = 0
 basic_tot = 0
 
-
 class AstNode(object):
     def __init__(self):
         super().__init__()
@@ -12,12 +11,20 @@ class AstNode(object):
         return [i for i in dir(self) if not callable(getattr(self, i)) and not i.startswith('__')]
 
     def travel(self, indent_num=0):
-        print(self.dump(indent_num))
-        attrs = self.gattrs()
-        for o in attrs:
-            v = getattr(self, o)
-            if v and isinstance(v, AstNode):
-                v.travel(indent_num + 2)
+        if isinstance(self, ListNode):
+            for son in self.NodeList:
+                if son and isinstance(son, AstNode):
+                    son.travel()
+                else:
+                    continue
+        else:
+            attrs = self.gattrs()
+            for o in attrs:
+                son = getattr(self, o)
+                if son and isinstance(son, AstNode):
+                    son.travel()
+                else:
+                    continue
 
     def dump(self, indent_num=0):
         return '{0}{1}'.format(
@@ -30,17 +37,28 @@ class AstNode(object):
         global treenode_tot
         treenode_tot += 1
         self.cnt = treenode_tot
-        attrs = self.gattrs()
-        for o in attrs:
-            son = getattr(self, o)
-            if son and isinstance(son, AstNode):
-                son.vis(file)
-                self.print_link(son, file)
-            else:
-                if son is self.cnt:
-                    continue
+        if isinstance(self, ListNode) or isinstance(self, ParaTypeListNode):
+            for son in self.NodeList:
+                if son and isinstance(son, AstNode):
+                    son.vis(file)
+                    self.print_link(son, file)
                 else:
-                    self.print_basic(son, file)
+                    if son is self.cnt:
+                        continue
+                    else:
+                        self.print_basic(son, file)
+        else:
+            attrs = self.gattrs()
+            for o in attrs:
+                son = getattr(self, o)
+                if son and isinstance(son, AstNode):
+                    son.vis(file)
+                    self.print_link(son, file)
+                else:
+                    if son is self.cnt:
+                        continue
+                    else:
+                        self.print_basic(son, file)
         self.print_info(file)
 
     def print_info(self, file):
@@ -54,6 +72,10 @@ class AstNode(object):
             return
         global basic_tot
         basic_tot += 1
+        if isinstance(v, str) and len(v) < 1: 
+            return
+        if v == '+':
+            v = 'add'
         file.write('TN' + str(self.cnt) + '->BS' + str(basic_tot) + ';\n')
         file.write('BS' + str(basic_tot) + '[shape=oval,label=' + str(v) + '];\n')
 
@@ -63,3 +85,30 @@ class ProgramNode(AstNode):
         super().__init__()
         self.routine = routine
         self.program_head = program_head
+
+class ListNode(AstNode):
+    def __init__(self, node=None):
+        super().__init__()
+        self.NodeList = []
+        if node is not None:
+            self.NodeList.append(node)
+
+    def append(self, node):
+        self.NodeList.append(node)
+
+    def travel(self, indent_num=0):
+        print(self.dump(indent_num))
+        for o in self.NodeList:
+            if o is not None:
+                o.travel(indent_num + 2)
+
+class ParaTypeListNode(AstNode):
+    def __init__(self, var_list, type):
+        super().__init__()
+        self.type = type
+        self.NodeList = []
+        if var_list is not None:
+            self.NodeList.append(var_list)
+
+    def append(self, node):
+        self.NodeList.append(node)
