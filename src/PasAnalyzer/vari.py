@@ -7,8 +7,7 @@ class VariableNode(AstNode):
         super().__init__()
         self.id = _id
         self.var_type = _var_type
-
-
+        
 class ArrayElementNode(AstNode):
     def __init__(self, _id, expression_array):
         super().__init__()

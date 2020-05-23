@@ -236,7 +236,7 @@ def p_function_decl(p):
 
 def p_function_head(p):
     'function_head :  PAS_FUNCTION  ID  parameters  SYM_COLON  simple_type_decl '
-    p[0] = FunctionHeadNode(p[2],VariableNode(p[3],'func'),p[5])
+    p[0] = FunctionHeadNode(VariableNode(p[2],'func'),p[3],p[5])
 
 def p_procedure_decl(p):
     'procedure_decl :  procedure_head  SYM_SEMICOLON  sub_routine  SYM_SEMICOLON'
@@ -278,7 +278,7 @@ def p_var_para_list(p):
 
 def p_val_para_list(p):
     'val_para_list : name_list'
-    p[2].set_type('para')
+    p[1].set_type('para')
     p[0] = p[1]
 
 #############################Body Part############################

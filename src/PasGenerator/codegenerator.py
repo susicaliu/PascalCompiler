@@ -62,6 +62,7 @@ class CodeGenerator(object):
     def _codegen_(self, ast_node, builder):
         if (ast_node is None):
             return
+        print(ast_node.__class__.__name__)
         return getattr(self, '_codegen_' + ast_node.__class__.__name__)(ast_node, builder)
 
     def register_writeln(self):
@@ -206,6 +207,7 @@ class CodeGenerator(object):
 
     def _codegen_ConstValueNode(self, ast_node, builder):
         # type value
+        print(ast_node.type)
         return builder.constant(self.type_convert(ast_node.type), ast_node.value)
 
     def _codegen_FunctionProto(self, proto, builder, func_para_name, func_para_type, func_return_type_list, gen_type):
@@ -286,8 +288,23 @@ class CodeGenerator(object):
 
     def _codegen_SimpleTypeDeclNode(self, ast_node, builder):
         # type_name
-        type = self.GenTable.get_type(ast_node.type)
-        return type
+        type_name = ast_node.type
+        print(type_name)
+        if (isinstance(type_name, ir.Type)):
+            return type_name
+        if (type_name in ['integer', 'int']):
+            return ir.IntType(32)
+        if (type_name in ['real']):
+            return ir.DoubleType()
+        if (type_name in ['boolean']):
+            return ir.IntType(1)
+        if (type_name in ['void']):
+            return ir.VoidType()
+        if (type_name in ['char']):
+            return ir.IntType(8)
+
+        _type = self.GenTable.get_type(type_name)
+        return _type
 
     def _codegen_VariableTypeDeclNode(self, ast_node, builder):
         # id
@@ -296,10 +313,11 @@ class CodeGenerator(object):
 
     def _codegen_ArrayTypeDeclNode(self, ast_node, builder):
         # simple_type_decl type_decl
-        simple_type = self._codegen_(ast_node.simple_type_decl, builder)
-        type = self._codegen_(ast_node.type_decl, builder)
-
-        return simple_type, type
+        range_type = self._codegen_(ast_node.simple_type_decl, builder)
+        element_type = self._codegen_(ast_node.type_decl, builder)
+        array_len = range_type[1] - range_type[0] + 1
+        ret = ir.ArrayType(element_type, array_len)
+        return ret
 
     def _codegen_EnumTypeDeclNode(self, ast_node, builder):
         # name_list
@@ -313,7 +331,7 @@ class CodeGenerator(object):
         return type
 
     def _codegen_RangeTypeDeclNode(self, ast_node, builder):
-        # num1 const_value1 num2 const_value2
+        # const_value1 const_value2
         type = self.GenTable.get_type(ast_node.const_value1.type)
         return type
 
@@ -322,9 +340,9 @@ class CodeGenerator(object):
         for name in ast_node.name_list.NodeList:
             if (isinstance(ast_node.type_decl, VariableTypeDeclNode)):
                 type = self.GenTable.get_type(ast_node.type_decl.type)
-                address = self.add_new_variable(variable=name, variable_type=type, builder=builder)
+                address = self.add_new_variable(variable=name.id, variable_type=type, builder=builder)
             else:
-                address = self.add_new_variable(variable=name, variable_type=ast_node.type_decl.id, builder=builder)
+                address = self.add_new_variable(variable=name.id, variable_type=ast_node.type_decl.id, builder=builder)
 
         return address
 
