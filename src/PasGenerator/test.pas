@@ -1,10 +1,24 @@
-program test_assign_basic;
-var
-    a, b, ans: integer;
+program test_2;
+type
+    arr = array [1..50] of integer;
+var i,a,b,c,s: integer;
+    f:arr;
+
+function g1(x:integer):integer;
+  var s:integer;
+  function g2(x:integer):integer;
+    var s:integer;
+    begin
+        s:=2;
+        g2:=1;
+    end;
+  begin
+    s:=1;
+    g2(12);
+    g1:=1;
+  end;
+
 begin
-<<<<<<< HEAD
-    ans := a - b;
+  s:=0;
+  g1(3);
 end.
-=======
-    ans := a - b;
->>>>>>> 3fa52dbc4271c0cab8a36278d16317ab318bbd0a

@@ -26,9 +26,9 @@ class GenTable(object):
         self.variable_table.setdefault(key_name, {}).setdefault(variable_name, []).append((address, variable_type))
 
     def get_type(self, type_name):
-        res = self.variable_table.get(type_name)
+        res = self.type_table.get(type_name)
         if (res is not None):
-            res = res[-1][1]
+            res = res[-1]
         else:
             raise Exception("Error: {0} is not exist!".format(type_name))
         return res
@@ -73,12 +73,16 @@ class GenTable(object):
             raise Exception("Error: {0} is not exist!".format(name))
         return res
 
-    def get_address(self, _id):
-        res = self.variable_table.get(_id)
+    def get_variable_addr(self, name):
+        res = self.variable_table.get(name)
         if (res is not None):
             return res[-1][0]
         else:
-            raise Exception("Error: {0} is not exist!".format(_id))
+            raise Exception("Error: {0} is not exist!".format(name))
+
+    def get_address(self, _id):
+        res = self.get_variable_addr(_id)
+        return res
 
 
     def delete_scope(self, scope_id):
