@@ -10,15 +10,15 @@ class TypeDefinitionNode(AstNode):
 
 
 class SimpleTypeDeclNode(AstNode):
-    def __init__(self, type_name):
+    def __init__(self, id):
         super().__init__()
-        self.type_name = type_name
+        self.id = id
 
 
 class VariableTypeDeclNode(AstNode):
-    def __init__(self, _id):
+    def __init__(self, id):
         super().__init__()
-        self.id = _id
+        self.id = id
 
 
 class ArrayTypeDeclNode(AstNode):
