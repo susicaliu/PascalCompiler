@@ -311,7 +311,7 @@ class CodeGenerator(object):
         # name_list type_decl
         for name in ast_node.name_list.NodeList:
             if (isinstance(ast_node.type_decl, VariableTypeDeclNode)):
-                type = self.GenTable.get_type(ast_node.type_decl.id)
+                type = self.type_convert(ast_node.type_decl.id)
                 address = self.add_new_variable(variable=name.id, variable_type=type, builder=builder)
             else:
                 print(name.id, ast_node.type_decl.id)
@@ -336,8 +336,10 @@ class CodeGenerator(object):
     def _codegen_StmtNode(self, node, builder):
         return self._codegen_(node.stmt_node,builder)
     def _codegen_AssignStmtNode(self, node, builder):
-        lhs = self.GenTable.get_address(node.element_node)#self._codegen_(node.element_node, builder)
+        lhs = self.GenTable.get_address(node.element_node)
         rhs = self._codegen_(node.expression, builder)
+        if rhs.type != lhs.type.pointee:
+            rhs = builder.load(rhs)
         builder.store(rhs, lhs)
 
     def _codegen_IfStmtNode(self, node, builder):
@@ -387,11 +389,11 @@ class CodeGenerator(object):
         builder.position_at_end(jumpout)
 
     def _codegen_ForStmtNode(self, node, builder):
-        var_addr = self.add_new_variable(variable=node.name, variable_type=ir.IntType(32), builder=builder)
+
+        var_addr = self.add_new_variable(variable=node.name.id, variable_type=ir.IntType(32), builder=builder)
         init_val = self._codegen_(node.expression1, builder)
 
-
-        final_val =self.GenTable.get_address(node.expression2) #self._codegen_(node.expression2, builder)
+        final_val =self.GenTable.get_address(node.expression2) 
         direction = node.direction.value  # int--> TO:1, DOWNTO: -1
         builder.store(init_val, var_addr)
 
@@ -488,8 +490,8 @@ class CodeGenerator(object):
 
     def _codegen_CompExpr(self, ast_node, builder):
         ret = None
-        lhs = self._codegen_(ast_node.lexpr, builder)
-        rhs = self._codegen_(ast_node.rexpr, builder)
+        lhs = self.GenTable.get_address(ast_node.lexpr)
+        rhs = self.GenTable.get_address(ast_node.rexpr)
         _type = self._type_cast(ast_node.lexpr, ast_node.rexpr)
         if _type == 'int':
             ret = builder.icmp_signed(ast_node.op, lhs, rhs)
@@ -502,22 +504,21 @@ class CodeGenerator(object):
 
     def _codegen_AddExpr(self, ast_node, builder):
         ret = None
-        lhs = self.GenTable.get_address(ast_node.lexpr)#self._codegen_(ast_node.lexpr, builder)
-        rhs = self.GenTable.get_address(ast_node.rexpr)#self._codegen_(ast_node.rexpr, builder)
-        type=self.GenTable.get_type(ast_node.lexpr)
+        lhs = self.GenTable.get_address(ast_node.lexpr)
+        rhs = self.GenTable.get_address(ast_node.rexpr)
+        addr, type =self.GenTable.get_variable_addr_type(ast_node.rexpr)
         if isinstance(type,ir.IntType):
             ret = builder.add(lhs, rhs)
         elif isinstance(type,ir.FloatType):
             ret = builder.fadd(lhs, rhs)
         else:
             pass  ####error
-
         return ret
 
     def _codegen_SubExpr(self, ast_node, builder):
         ret = None
-        lhs = self._codegen_(ast_node.lexpr, builder)
-        rhs = self._codegen_(ast_node.rexpr, builder)
+        lhs = self.GenTable.get_address(ast_node.lexpr)
+        rhs = self.GenTable.get_address(ast_node.rexpr)
         if ast_node.type == 'int':
             ret = builder.sub(lhs, rhs)
         elif ast_node.type == 'real':
@@ -528,8 +529,8 @@ class CodeGenerator(object):
 
     def _codegen_OrExpr(self, ast_node, builder):
         ret = None
-        lhs = self._codegen_(ast_node.lexpr, builder)
-        rhs = self._codegen_(ast_node.rexpr, builder)
+        lhs = self.GenTable.get_address(ast_node.lexpr)
+        rhs = self.GenTable.get_address(ast_node.rexpr)
         if ast_node.type == 'bool':
             ret = builder.or_(lhs, rhs)
         else:
@@ -538,8 +539,8 @@ class CodeGenerator(object):
 
     def _codegen_MulExpr(self, ast_node, builder):
         ret = None
-        lhs = self._codegen_(ast_node.lexpr, builder)
-        rhs = self._codegen_(ast_node.rexpr, builder)
+        lhs = self.GenTable.get_address(ast_node.lexpr)
+        rhs = self.GenTable.get_address(ast_node.rexpr)
         if ast_node.type == 'int':
             ret = builder.mul(lhs, rhs)
         elif ast_node.type == 'real':
@@ -550,8 +551,8 @@ class CodeGenerator(object):
 
     def _codegen_DivExpr(self, ast_node, builder):
         ret = None
-        lhs = self._codegen_(ast_node.lexpr, builder)
-        rhs = self._codegen_(ast_node.rexpr, builder)
+        lhs = self.GenTable.get_address(ast_node.lexpr)
+        rhs = self.GenTable.get_address(ast_node.rexpr)
         if ast_node.type == 'int':
             ret = builder.sdiv(lhs, rhs)
         elif ast_node.type == 'real':
@@ -562,8 +563,8 @@ class CodeGenerator(object):
 
     def _codegen_ModExpr(self, ast_node, builder):
         ret = None
-        lhs = self._codegen_(ast_node.lexpr, builder)
-        rhs = self._codegen_(ast_node.rexpr, builder)
+        lhs = self.GenTable.get_address(ast_node.lexpr)
+        rhs = self.GenTable.get_address(ast_node.rexpr)
         if ast_node.type == 'int':
             ret = builder.srem(lhs, rhs)
         elif ast_node.type == 'real':
@@ -574,8 +575,8 @@ class CodeGenerator(object):
 
     def _codegen_AndExpr(self, ast_node, builder):
         ret = None
-        lhs = self._codegen_(ast_node.lexpr, builder)
-        rhs = self._codegen_(ast_node.rexpr, builder)
+        lhs = self.GenTable.get_address(ast_node.lexpr)
+        rhs = self.GenTable.get_address(ast_node.rexpr)
         if ast_node.type == 'bool':
             ret = builder.and_(lhs, rhs)
         else:
