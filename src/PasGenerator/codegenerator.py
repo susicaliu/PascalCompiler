@@ -693,6 +693,17 @@ if __name__ == '__main__':
     print(ast)
     print("====================AST====================")
 
+    visible = True
+    if visible:
+        f = open('parsetree.dot','w')
+        f.write('digraph g {\n')
+        ast.vis(f)
+        f.write('}\n')
+        f.close()
+        os.system('dot -Tpng parsetree.dot -o parsetree.png')
+    else:
+        ast.travle()
+        
     codegen = CodeGenerator('Test')
     codegen.generate(ast)
 
