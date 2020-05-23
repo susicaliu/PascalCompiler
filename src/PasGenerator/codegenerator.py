@@ -57,10 +57,6 @@ class CodeGenerator(object):
                                        scope_id=self.scope_id)
         return address
 
-    def assign(self, variable, value, builder):
-        # Store value to pointer ptr.
-        return builder.store(variable, value)
-
     def _codegen_(self, ast_node, builder):
         if (ast_node is None):
             return
@@ -197,7 +193,7 @@ class CodeGenerator(object):
         # id const_value
         variable = self.add_new_variable(variable=ast_node.id, variable_type=ast_node.const_value.type, builder=builder)
         value = self._codegen_(ast_node.const_value, builder)
-        return self.assign(variable=variable, value=value, builder=builder)
+        return builder.store(value,variable)
 
     # --------------------------TypeNode-------------------------------------
     def _codegen_TypeDefinitionNode(self, ast_node, builder):
@@ -348,7 +344,7 @@ class CodeGenerator(object):
         builder.store(rhs, lhs)
 
     def _codegen_IfStmtNode(self, node, builder):
-        pred = builder.icmp_signed('!=', self._codegen(node.expression), ir.Constant(ir.IntType(1), 0))
+        pred = builder.icmp_signed('!=', self._codegen_(node.expression,builder), ir.Constant(ir.IntType(1), 0))
         with builder.if_else(pred) as (then, otherwise):
             with then:
                 self._codegen_(node.stmt, builder)
@@ -429,9 +425,9 @@ class CodeGenerator(object):
     def _helper_gen_cmp_code(self, var_name, addr, target_val, step_dir, addit, builder):
         cur_val = builder.load(addr, var_name)
         if addit:
-            step_val = self._codegen(step_dir, builder)
+            step_val = self._codegen_(step_dir, builder)
             cur_val = builder.add(cur_val, step_val)
-            self._codegen_do_assign(addr, cur_val, builder)
+            builder.store(cur_val, addr)
         if step_dir > 0:
             return builder.icmp_signed('<=', cur_val, target_val)
         else:
