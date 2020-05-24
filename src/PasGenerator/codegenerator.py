@@ -393,7 +393,7 @@ class CodeGenerator(object):
         var_addr = self.add_new_variable(variable=node.name.id, variable_type=ir.IntType(32), builder=builder)
         init_val = self._codegen_(node.expression1, builder)
 
-        final_val =self.GenTable.get_address(node.expression2) 
+        final_val =self._codegen_(node.expression2, builder)
         direction = node.direction.value  # int--> TO:1, DOWNTO: -1
         builder.store(init_val, var_addr)
 
@@ -513,7 +513,7 @@ class CodeGenerator(object):
             rhs = builder.load(rhs)
         if isinstance(type,ir.IntType):
             ret = builder.icmp_signed(ast_node.op, lhs, rhs)
-        elif isinstance(type, ir.FloatType):
+        elif isinstance(type, ir.DoubleType):
             ret = builder.fcmp_signed(ast_node.op, lhs, rhs)
         else:
             pass  ####error
@@ -523,6 +523,7 @@ class CodeGenerator(object):
     def _codegen_AddExpr(self, ast_node, builder):
         ret = None
         type=None
+
         if(isinstance(ast_node.lexpr,ConstValueNode)):
             lhs =self._codegen_(ast_node.lexpr,builder)
             type=lhs.type
@@ -538,7 +539,7 @@ class CodeGenerator(object):
 
         if isinstance(type,ir.IntType):
             ret = builder.add(lhs, rhs)
-        elif isinstance(type,ir.FloatType):
+        elif isinstance(type,ir.DoubleType):
             ret = builder.fadd(lhs, rhs)
         else:
             pass  ####error
@@ -561,7 +562,7 @@ class CodeGenerator(object):
             rhs = builder.load(rhs)
         if isinstance(type,ir.IntType):
             ret = builder.sub(lhs, rhs)
-        elif isinstance(type, ir.FloatType):
+        elif isinstance(type, ir.DoubleType):
             ret = builder.fsub(lhs, rhs)
         else:
             pass
@@ -570,6 +571,7 @@ class CodeGenerator(object):
     def _codegen_OrExpr(self, ast_node, builder):
         ret = None
         type = None
+        print(ast_node.lexpr)
         if (isinstance(ast_node.lexpr, ConstValueNode)):
             lhs = self._codegen_(ast_node.lexpr, builder)
             type = lhs.type
@@ -605,7 +607,7 @@ class CodeGenerator(object):
             rhs = builder.load(rhs)
         if isinstance(type, ir.IntType):
             ret = builder.mul(lhs, rhs)
-        elif isinstance(type, ir.FloatType):
+        elif isinstance(type, ir.DoubleType):
             ret = builder.fmul(lhs, rhs)
         else:
             pass  ####error
@@ -628,7 +630,7 @@ class CodeGenerator(object):
             rhs = builder.load(rhs)
         if isinstance(type, ir.IntType):
             ret = builder.sdiv(lhs, rhs)
-        elif isinstance(type, ir.FloatType):
+        elif isinstance(type, ir.DoubleType):
             ret = builder.fdiv(lhs, rhs)
         else:
             pass  ####error
@@ -651,7 +653,7 @@ class CodeGenerator(object):
             rhs = builder.load(rhs)
         if isinstance(type,ir.IntType):
             ret = builder.srem(lhs, rhs)
-        elif isinstance(type, ir.FloatType):
+        elif isinstance(type, ir.DoubleType):
             ret = builder.frem(lhs, rhs)
         else:
             pass  ####error
@@ -772,7 +774,7 @@ class CodeGenerator(object):
             return ir.IntType(32)
         if (type in ['real']):
             return ir.DoubleType()
-        if (type in ['boolean']):
+        if (type in ['boolean','bool']):
             return ir.IntType(1)
         if (type in ['void']):
             return ir.VoidType()

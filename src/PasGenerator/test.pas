@@ -3,23 +3,17 @@ type
     arr = array [1..50] of integer;
 var i,a,b,c,s: integer;
     f:arr;
-
-function g1(x:integer):integer;
-  var s:integer;
-  function g2(x:integer):integer;
-    var s,q:integer;
-    begin
-        s:=2;
-        q:=3;
-        s:=s*q;
-    end;
-  begin
-    s:=1;
-    g2(12);
-    g1:=1;
-  end;
+    b1,b2: real;
 
 begin
-  s:=0;
-  g1(3);
+ a:=1;
+ for i:=1 to 7 do begin
+    a:=a+i;
+ end;
+   begin
+  if ((a = 0) or (a = 1)) then
+    a:=1
+  else
+    a:=0;
+end;
 end.
