@@ -36,8 +36,6 @@ class CodeGenerator(object):
     def generate(self, ast_node):
         return self._codegen_(ast_node, None)
 
-
-
     def add_new_variable(self, variable, variable_type, builder):
         with builder.goto_entry_block():
             typ = self.type_convert(variable_type)
@@ -49,7 +47,7 @@ class CodeGenerator(object):
     def _codegen_(self, ast_node, builder):
         if (ast_node is None):
             return
-        #print(ast_node.__class__.__name__)
+        # print(ast_node.__class__.__name__)
         return getattr(self, '_codegen_' + ast_node.__class__.__name__)(ast_node, builder)
 
     def register_writeln(self):
@@ -190,13 +188,13 @@ class CodeGenerator(object):
         # id type_decl
         variable = ast_node.id.id
         type = self._codegen_(ast_node.type_decl, builder)
-        #print(variable)
+        # print(variable)
         self.GenTable.add_type(variable_name=variable, variable_type=type, scope_id=self.scope_id)
 
     def _codegen_ConstValueNode(self, ast_node, builder):
         # type value
         return ir.Constant(self.type_convert(ast_node.type), ast_node.value)
-    
+
     def _codegen_FunctionProto(self, proto, builder, func_para_name, func_para_type, func_return_type_list, gen_type):
         func_name = proto.id.id
         if (gen_type == 'function'):
@@ -275,7 +273,7 @@ class CodeGenerator(object):
 
     def _codegen_SimpleTypeDeclNode(self, ast_node, builder):
         # type_name
-        type = self.type_convert(ast_node.id) ####自定义type不能这样写
+        type = self.type_convert(ast_node.id)  ####自定义type不能这样写
         return type
 
     def _codegen_VariableTypeDeclNode(self, ast_node, builder):
@@ -306,7 +304,7 @@ class CodeGenerator(object):
         # const_value1 const_value2
         num1 = ast_node.const_value1.value
         num2 = ast_node.const_value2.value
-        return [int(num1),int(num2)]
+        return [int(num1), int(num2)]
 
     def _codegen_VarDeclNode(self, ast_node, builder):
         # name_list type_decl
@@ -315,7 +313,7 @@ class CodeGenerator(object):
                 type = self.GenTable.get_type(ast_node.type_decl.id)
                 address = self.add_new_variable(variable=name.id, variable_type=type, builder=builder)
             else:
-                #print(name.id, ast_node.type_decl.id)
+                # print(name.id, ast_node.type_decl.id)
                 address = self.add_new_variable(variable=name.id, variable_type=ast_node.type_decl.id, builder=builder)
 
         return address
@@ -334,7 +332,8 @@ class CodeGenerator(object):
 
     # -----------------------------------StmtNode-------------------------------------
     def _codegen_StmtNode(self, node, builder):
-        return self._codegen_(node.stmt_node,builder)
+        return self._codegen_(node.stmt_node, builder)
+
     def _codegen_AssignStmtNode(self, node, builder):
         lhs = self.GenTable.get_address(node.element_node)
         rhs = self._codegen_(node.expression, builder)
@@ -393,7 +392,7 @@ class CodeGenerator(object):
         var_addr = self.add_new_variable(variable=node.name.id, variable_type=ir.IntType(32), builder=builder)
         init_val = self._codegen_(node.expression1, builder)
 
-        final_val =self.GenTable.get_address(node.expression2) 
+        final_val = self.GenTable.get_address(node.expression2)
         direction = node.direction.value  # int--> TO:1, DOWNTO: -1
         builder.store(init_val, var_addr)
 
@@ -445,15 +444,15 @@ class CodeGenerator(object):
 
     def _codegen_CallStmtNode(self, node, builder):
         fn = self.GenTable.get_func(node.func_name)
-        args=[]
+        args = []
         for arg in node.args_list.NodeList:
-            if(isinstance(arg,ConstValueNode)):
+            if (isinstance(arg, ConstValueNode)):
                 args.append(self._codegen_(arg, builder))
             else:
-                address=self.GenTable.get_variable_addr(arg)
-                arg=builder.load(address)
+                address = self.GenTable.get_variable_addr(arg)
+                arg = builder.load(address)
                 args.append(arg)
-        #args = [self._codegen_(arg, builder) for arg in node.args_list.NodeList]
+        # args = [self._codegen_(arg, builder) for arg in node.args_list.NodeList]
         return builder.call(fn, args, 'call_fn')
 
     # ---------------------------------ExpressionNode-------------------------
@@ -511,7 +510,7 @@ class CodeGenerator(object):
         else:
             rhs = self.GenTable.get_address(ast_node.rexpr)
             rhs = builder.load(rhs)
-        if isinstance(type,ir.IntType):
+        if isinstance(type, ir.IntType):
             ret = builder.icmp_signed(ast_node.op, lhs, rhs)
         elif isinstance(type, ir.FloatType):
             ret = builder.fcmp_signed(ast_node.op, lhs, rhs)
@@ -522,12 +521,12 @@ class CodeGenerator(object):
 
     def _codegen_AddExpr(self, ast_node, builder):
         ret = None
-        type=None
-        if(isinstance(ast_node.lexpr,ConstValueNode)):
-            lhs =self._codegen_(ast_node.lexpr,builder)
-            type=lhs.type
+        type = None
+        if (isinstance(ast_node.lexpr, ConstValueNode)):
+            lhs = self._codegen_(ast_node.lexpr, builder)
+            type = lhs.type
         else:
-            lhs= self.GenTable.get_address(ast_node.lexpr)
+            lhs = self.GenTable.get_address(ast_node.lexpr)
             lhs = builder.load(lhs)
             addr, type = self.GenTable.get_variable_addr_type(ast_node.lexpr)
         if (isinstance(ast_node.rexpr, ConstValueNode)):
@@ -536,9 +535,9 @@ class CodeGenerator(object):
             rhs = self.GenTable.get_address(ast_node.rexpr)
             rhs = builder.load(rhs)
 
-        if isinstance(type,ir.IntType):
+        if isinstance(type, ir.IntType):
             ret = builder.add(lhs, rhs)
-        elif isinstance(type,ir.FloatType):
+        elif isinstance(type, ir.FloatType):
             ret = builder.fadd(lhs, rhs)
         else:
             pass  ####error
@@ -559,7 +558,7 @@ class CodeGenerator(object):
         else:
             rhs = self.GenTable.get_address(ast_node.rexpr)
             rhs = builder.load(rhs)
-        if isinstance(type,ir.IntType):
+        if isinstance(type, ir.IntType):
             ret = builder.sub(lhs, rhs)
         elif isinstance(type, ir.FloatType):
             ret = builder.fsub(lhs, rhs)
@@ -582,7 +581,7 @@ class CodeGenerator(object):
         else:
             rhs = self.GenTable.get_address(ast_node.rexpr)
             rhs = builder.load(rhs)
-        if isinstance(type,ir.IntType):
+        if isinstance(type, ir.IntType):
             ret = builder.or_(lhs, rhs)
         else:
             pass  ####error
@@ -649,7 +648,7 @@ class CodeGenerator(object):
         else:
             rhs = self.GenTable.get_address(ast_node.rexpr)
             rhs = builder.load(rhs)
-        if isinstance(type,ir.IntType):
+        if isinstance(type, ir.IntType):
             ret = builder.srem(lhs, rhs)
         elif isinstance(type, ir.FloatType):
             ret = builder.frem(lhs, rhs)
@@ -672,7 +671,7 @@ class CodeGenerator(object):
         else:
             rhs = self.GenTable.get_address(ast_node.rexpr)
             rhs = builder.load(rhs)
-        if isinstance(type,ir.IntType):
+        if isinstance(type, ir.IntType):
             ret = builder.and_(lhs, rhs)
         else:
             pass  ####error
@@ -747,9 +746,9 @@ class CodeGenerator(object):
         return ret
 
     def _codegen_CaseExprListNode(self, ast_node, builder):
-        ret=[]
+        ret = []
         for case_expr in ast_node.NodeList:
-            val, tmp_block=self._codegen_(case_expr,builder)
+            val, tmp_block = self._codegen_(case_expr, builder)
             ret.append((val, tmp_block))
         return ret
 
@@ -779,36 +778,3 @@ class CodeGenerator(object):
         if (type in ['char']):
             return ir.IntType(8)
         raise Exception('Error: invalid data type')
-
-if __name__ == '__main__':
-    # All these initializations are required for code generation!
-    llvm.initialize()
-    llvm.initialize_native_target()
-    llvm.initialize_native_asmprinter()  # yes, even this one
-
-    codestr = open('test.pas', 'r').read()
-    print(codestr)
-    my_parser = parser
-    ast = my_parser.parse(codestr)
-
-    print("====================AST====================")
-    print(ast)
-    print("====================AST====================")
-
-    visible = True
-    if visible:
-        f = open('parsetree.dot','w')
-        f.write('digraph g {\n')
-        ast.vis(f)
-        f.write('}\n')
-        f.close()
-        os.system('dot -Tpng parsetree.dot -o parsetree.png')
-    else:
-        ast.travle()
-        
-    codegen = CodeGenerator('Test')
-    codegen.generate(ast)
-
-    print("====================IR====================")
-    print(str(codegen.module))
-    print("====================IR====================")

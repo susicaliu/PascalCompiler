@@ -1,4 +1,6 @@
 import llvmlite.ir as ir
+
+
 class GenTable(object):
     def __init__(self):
         self.variable_table = {}
@@ -57,7 +59,6 @@ class GenTable(object):
         else:
             raise Exception("Error: {0} is not exist!".format(name))
 
-
     def get_variable_addr_type(self, name):
         res = self.variable_table.get(name)
         if (res is not None):
@@ -83,7 +84,6 @@ class GenTable(object):
     def get_address(self, _id):
         res = self.get_variable_addr(_id)
         return res
-
 
     def delete_scope(self, scope_id):
         for name in self.variable_scope.get(scope_id, []):
