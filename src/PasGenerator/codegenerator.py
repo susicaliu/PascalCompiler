@@ -445,7 +445,15 @@ class CodeGenerator(object):
 
     def _codegen_CallStmtNode(self, node, builder):
         fn = self.GenTable.get_func(node.func_name)
-        args = [self._codegen_(arg, builder) for arg in node.args_list.NodeList]
+        args=[]
+        for arg in node.args_list.NodeList:
+            if(isinstance(arg,ConstValueNode)):
+                args.append(self._codegen_(arg, builder))
+            else:
+                address=self.GenTable.get_variable_addr(arg)
+                arg=builder.load(address)
+                args.append(arg)
+        #args = [self._codegen_(arg, builder) for arg in node.args_list.NodeList]
         return builder.call(fn, args, 'call_fn')
 
     # ---------------------------------ExpressionNode-------------------------
