@@ -390,9 +390,18 @@ class CodeGenerator(object):
     def _codegen_ForStmtNode(self, node, builder):
 
         var_addr = self.add_new_variable(variable=node.name.id, variable_type=ir.IntType(32), builder=builder)
-        init_val = self._codegen_(node.expression1, builder)
+        if (isinstance(node.expression1, str)):
+            init_val_addr = self.GenTable.get_address(node.expression1)
+            init_val = builder.load(init_val_addr)
 
-        final_val = self._codegen_(node.expression2, builder)
+        else:
+            init_val = self._codegen_(node.expression1, builder)
+        if (isinstance(node.expression2, str)):
+            final_val_addr = self.GenTable.get_address(node.expression2)
+            final_val = builder.load(final_val_addr)
+
+        else:
+            final_val = self._codegen_(node.expression2, builder)
 
         direction = node.direction.value  # int--> TO:1, DOWNTO: -1
         builder.store(init_val, var_addr)
