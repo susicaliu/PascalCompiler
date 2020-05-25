@@ -361,7 +361,12 @@ class CodeGenerator(object):
         r_builder = ir.IRBuilder(repeat_block)
         s_builder = ir.IRBuilder(stmt)
         self._codegen_(node.stmt_list, s_builder)
-        end_expr = self._codegen_(node.expression, r_builder)
+        if (isinstance(node.expression, str)):
+            end_expr_addr = self.GenTable.get_address(node.expression)
+            end_expr = builder.load(end_expr_addr)
+
+        else:
+            end_expr = self._codegen_(node.expression, r_builder)
         end_cond = r_builder.icmp_signed('==', end_expr, ir.Constant(ir.IntType(1), 0))
         r_builder.cbranch(end_cond, repeat_block, jumpout)
         s_builder.branch(repeat_block)
@@ -377,7 +382,13 @@ class CodeGenerator(object):
 
         builder.branch(while_block)
         w_builder = ir.IRBuilder(while_block)
-        end_expr = self._codegen_(node.expression, w_builder)
+
+        if (isinstance(node.expression, str)):
+            end_expr_addr = self.GenTable.get_address(node.expression)
+            end_expr = builder.load(end_expr_addr)
+
+        else:
+            end_expr = self._codegen_(node.expression, w_builder)
         end_cond = w_builder.icmp_signed('==', end_expr, ir.Constant(ir.IntType(1), 0))
 
         s_builder = ir.IRBuilder(stmt)
@@ -434,8 +445,12 @@ class CodeGenerator(object):
 
     def _codegen_CaseStmtNode(self, node, builder):
         ran = str(randint(0, 0x7FFFFFFF))
+        if (isinstance(node.expression, str)):
+            expr_addr = self.GenTable.get_address(node.expression)
+            expr = builder.load(expr_addr)
 
-        expr = self._codegen_(node.expression, builder)
+        else:
+            expr = self._codegen_(node.expression, builder)
         case_expr_list = self._codegen_(node.case_expr_list, builder)
         default = builder.append_basic_block('default_' + ran)
 
