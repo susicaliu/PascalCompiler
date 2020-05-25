@@ -159,18 +159,19 @@ class CodeGenerator(object):
     def _codegen_ArrayElementNode(self, ast_node, builder):
         # id  expression_array
         variable_addr = self.GenTable.get_address(ast_node.id)
-        vairable_type = self.type_convert(ast_node.type)
         array_index = []
 
         for index in ast_node.expression_array:
-            if isinstance(index, VariableNode):
-                val = self._codegen_(index, builder)
+            if isinstance(index, str):
+                val_addr = self.GenTable.get_address(index)
+                val=builder.load(val_addr)
             else:
-                val = ir.Constant(ir.IntType(32), index.value)
+                val = self._codegen_(index, builder)
             array_index.append(val)
         array_index.append(ir.Constant(ir.IntType(32), 0))
         address = builder.gep(variable_addr, array_index)
-        return builder.load(address, "array_element")
+
+        return address
 
     def _codegen_RecordElementNode(self, ast_node, builder):
         # id id2
@@ -185,10 +186,10 @@ class CodeGenerator(object):
 
     # --------------------------TypeNode-------------------------------------
     def _codegen_TypeDefinitionNode(self, ast_node, builder):
+
         # id type_decl
         variable = ast_node.id.id
         type = self._codegen_(ast_node.type_decl, builder)
-        # print(variable)
         self.GenTable.add_type(variable_name=variable, variable_type=type, scope_id=self.scope_id)
 
     def _codegen_ConstValueNode(self, ast_node, builder):
@@ -313,7 +314,7 @@ class CodeGenerator(object):
                 type = self.GenTable.get_type(ast_node.type_decl.id)
                 address = self.add_new_variable(variable=name.id, variable_type=type, builder=builder)
             else:
-                # print(name.id, ast_node.type_decl.id)
+                type =ast_node.type_decl.id
                 address = self.add_new_variable(variable=name.id, variable_type=ast_node.type_decl.id, builder=builder)
 
         return address
@@ -335,10 +336,24 @@ class CodeGenerator(object):
         return self._codegen_(node.stmt_node, builder)
 
     def _codegen_AssignStmtNode(self, node, builder):
-        lhs = self.GenTable.get_address(node.element_node)
-        rhs = self._codegen_(node.expression, builder)
-        if rhs.type != lhs.type.pointee:
-            rhs = builder.load(rhs)
+
+        if (isinstance(node.element_node,str)):
+            lhs = self.GenTable.get_address(node.element_node)
+        else:
+            lhs = self._codegen_(node.element_node, builder)
+
+        if (isinstance(node.expression, str)):
+            rhs = self.GenTable.get_address(node.expression)
+        else:
+            rhs = self._codegen_(node.expression, builder)
+
+
+        if(isinstance(lhs.type,ir.IntType)):
+            if rhs.type != lhs.type:
+                rhs = builder.load(rhs)
+        else:
+            if rhs.type != lhs.type.pointee:
+                rhs = builder.load(rhs)
         builder.store(rhs, lhs)
 
     def _codegen_IfStmtNode(self, node, builder):
@@ -808,6 +823,7 @@ class CodeGenerator(object):
         return ret
 
     def type_convert(self, type):
+
         if (isinstance(type, ir.Type)):
             return type
         if (type in ['integer', 'int']):
