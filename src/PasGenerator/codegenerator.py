@@ -376,12 +376,12 @@ class CodeGenerator(object):
         jumpout = builder.append_basic_block("jumpout_" + ran)
 
         builder.branch(while_block)
-
         w_builder = ir.IRBuilder(while_block)
-        s_builder = ir.IRBuilder(stmt)
         end_expr = self._codegen_(node.expression, w_builder)
-        end_cond = builder.icmp_signed('==', end_expr, ir.Constant(ir.IntType(1), 0))
-        w_builder.cbranch(end_cond, while_block, jumpout)
+        end_cond = w_builder.icmp_signed('==', end_expr, ir.Constant(ir.IntType(1), 0))
+
+        s_builder = ir.IRBuilder(stmt)
+        w_builder.cbranch(end_cond, stmt, jumpout)
         self._codegen_(node.stmt, s_builder)
         s_builder.branch(while_block)
 
@@ -392,7 +392,7 @@ class CodeGenerator(object):
         var_addr = self.add_new_variable(variable=node.name.id, variable_type=ir.IntType(32), builder=builder)
         init_val = self._codegen_(node.expression1, builder)
 
-        final_val =self._codegen_(node.expression2, builder)
+        final_val = self._codegen_(node.expression2, builder)
 
         direction = node.direction.value  # int--> TO:1, DOWNTO: -1
         builder.store(init_val, var_addr)
@@ -524,7 +524,7 @@ class CodeGenerator(object):
 
     def _codegen_AddExpr(self, ast_node, builder):
         ret = None
-        type=None
+        type = None
 
         if (isinstance(ast_node.lexpr, str)):
             lhs = self.GenTable.get_address(ast_node.lexpr)
@@ -543,7 +543,7 @@ class CodeGenerator(object):
 
         if isinstance(type, ir.IntType):
             ret = builder.add(lhs, rhs)
-        elif isinstance(type,ir.DoubleType):
+        elif isinstance(type, ir.DoubleType):
 
             ret = builder.fadd(lhs, rhs)
         else:
@@ -790,7 +790,7 @@ class CodeGenerator(object):
             return ir.IntType(32)
         if (type in ['real']):
             return ir.DoubleType()
-        if (type in ['boolean','bool']):
+        if (type in ['boolean', 'bool']):
             return ir.IntType(1)
         if (type in ['void']):
             return ir.VoidType()
