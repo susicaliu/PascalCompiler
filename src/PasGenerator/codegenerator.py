@@ -489,8 +489,13 @@ class CodeGenerator(object):
             if (isinstance(arg, ConstValueNode)):
                 args.append(self._codegen_(arg, builder))
             else:
-                address = self.GenTable.get_variable_addr(arg)
-                arg = builder.load(address)
+
+                if (isinstance(arg, str)):
+                    address = self.GenTable.get_variable_addr(arg)
+                    arg = builder.load(address)
+                else:
+
+                    arg = self._codegen_(arg, builder)
                 args.append(arg)
         # args = [self._codegen_(arg, builder) for arg in node.args_list.NodeList]
         return builder.call(fn, args, 'call_fn')
