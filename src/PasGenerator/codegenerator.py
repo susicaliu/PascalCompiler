@@ -362,7 +362,7 @@ class CodeGenerator(object):
         s_builder = ir.IRBuilder(stmt)
         self._codegen_(node.stmt_list, s_builder)
         end_expr = self._codegen_(node.expression, r_builder)
-        end_cond = builder.icmp_signed('==', end_expr, ir.Constant(ir.IntType(1), 0))
+        end_cond = r_builder.icmp_signed('==', end_expr, ir.Constant(ir.IntType(1), 0))
         r_builder.cbranch(end_cond, repeat_block, jumpout)
         s_builder.branch(repeat_block)
 
