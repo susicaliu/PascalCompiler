@@ -1,4 +1,4 @@
-program test_2;
+program test_for;
 type
     arr = array [1..50] of integer;
 var i,a,b,c,s: integer;
@@ -8,12 +8,6 @@ var i,a,b,c,s: integer;
 begin
  a:=1;
  for i:=1 to 7 do begin
-    a:=a+i;
+    f[i]:=i;
  end;
-   begin
-  if ((a = 0) or (a = 1)) then
-    a:=1
-  else
-    a:=0;
-end;
 end.
