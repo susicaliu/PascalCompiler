@@ -291,8 +291,7 @@ class CodeGenerator(object):
         return ret
 
     def _codegen_EnumTypeDeclNode(self, ast_node, builder):
-        # name_list
-        type = self.type_convert(ast_node.name_list.type)
+        type = ir.IntType(32)
 
         return type
 
@@ -644,7 +643,6 @@ class CodeGenerator(object):
         elif isinstance(ltype, ir.DoubleType):
             ret = builder.fsub(lhs, rhs)
         else:
-            print('here')
             pass
 
 
