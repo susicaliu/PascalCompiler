@@ -544,24 +544,33 @@ class CodeGenerator(object):
 
     def _codegen_CompExpr(self, ast_node, builder):
         ret = None
-        type = None
+        ltype = None
+        rtype=None
         if (isinstance(ast_node.lexpr, str)):
             lhs = self.GenTable.get_address(ast_node.lexpr)
             lhs = builder.load(lhs)
-            addr, type = self.GenTable.get_variable_addr_type(ast_node.lexpr)
-
+            addr, ltype = self.GenTable.get_variable_addr_type(ast_node.lexpr)
         else:
             lhs = self._codegen_(ast_node.lexpr, builder)
-            type = lhs.type
+            ltype = lhs.type
+            if(isinstance(ltype, ir.PointerType)):
+                lhs=builder.load(lhs)
+                ltype=lhs.type
+
         if (isinstance(ast_node.rexpr, str)):
             rhs = self.GenTable.get_address(ast_node.rexpr)
             rhs = builder.load(rhs)
+            addr,rtype=self.GenTable.get_variable_addr_type(ast_node.rexpr)
         else:
-
             rhs = self._codegen_(ast_node.rexpr, builder)
-        if isinstance(type, ir.IntType):
+            rtype=rhs.type
+            if (isinstance(rtype,  ir.PointerType)):
+                rhs = builder.load(rhs)
+                rtype =rhs.type
+
+        if isinstance(ltype, ir.IntType):
             ret = builder.icmp_signed(ast_node.op, lhs, rhs)
-        elif isinstance(type, ir.DoubleType):
+        elif isinstance(ltype, ir.DoubleType):
             ret = builder.fcmp_signed(ast_node.op, lhs, rhs)
         else:
             pass  ####error
@@ -570,26 +579,33 @@ class CodeGenerator(object):
 
     def _codegen_AddExpr(self, ast_node, builder):
         ret = None
-        type = None
-
+        ltype = None
+        rtype = None
         if (isinstance(ast_node.lexpr, str)):
             lhs = self.GenTable.get_address(ast_node.lexpr)
             lhs = builder.load(lhs)
-            addr, type = self.GenTable.get_variable_addr_type(ast_node.lexpr)
-
+            addr, ltype = self.GenTable.get_variable_addr_type(ast_node.lexpr)
         else:
             lhs = self._codegen_(ast_node.lexpr, builder)
-            type = lhs.type
+            ltype = lhs.type
+            if (isinstance(ltype, ir.PointerType)):
+                lhs = builder.load(lhs)
+                ltype = lhs.type
+
         if (isinstance(ast_node.rexpr, str)):
             rhs = self.GenTable.get_address(ast_node.rexpr)
             rhs = builder.load(rhs)
+            addr, rtype = self.GenTable.get_variable_addr_type(ast_node.rexpr)
         else:
-
             rhs = self._codegen_(ast_node.rexpr, builder)
+            rtype = rhs.type
+            if (isinstance(rtype, ir.PointerType)):
+                rhs = builder.load(rhs)
+                rtype = rhs.type
 
-        if isinstance(type, ir.IntType):
+        if isinstance(ltype, ir.IntType):
             ret = builder.add(lhs, rhs)
-        elif isinstance(type, ir.DoubleType):
+        elif isinstance(ltype, ir.DoubleType):
 
             ret = builder.fadd(lhs, rhs)
         else:
@@ -598,47 +614,69 @@ class CodeGenerator(object):
 
     def _codegen_SubExpr(self, ast_node, builder):
         ret = None
-        type = None
+        ltype = None
+        rtype=None
         if (isinstance(ast_node.lexpr, str)):
             lhs = self.GenTable.get_address(ast_node.lexpr)
             lhs = builder.load(lhs)
-            addr, type = self.GenTable.get_variable_addr_type(ast_node.lexpr)
-
+            addr, ltype = self.GenTable.get_variable_addr_type(ast_node.lexpr)
         else:
             lhs = self._codegen_(ast_node.lexpr, builder)
-            type = lhs.type
+            ltype = lhs.type
+            if(isinstance(ltype, ir.PointerType)):
+                lhs=builder.load(lhs)
+                ltype=lhs.type
+
         if (isinstance(ast_node.rexpr, str)):
             rhs = self.GenTable.get_address(ast_node.rexpr)
             rhs = builder.load(rhs)
+            addr,rtype=self.GenTable.get_variable_addr_type(ast_node.rexpr)
         else:
-
             rhs = self._codegen_(ast_node.rexpr, builder)
-        if isinstance(type, ir.IntType):
+            rtype=rhs.type
+            if (isinstance(rtype,  ir.PointerType)):
+                rhs = builder.load(rhs)
+                rtype =rhs.type
+
+
+        if isinstance(ltype, ir.IntType):
             ret = builder.sub(lhs, rhs)
-        elif isinstance(type, ir.DoubleType):
+        elif isinstance(ltype, ir.DoubleType):
             ret = builder.fsub(lhs, rhs)
         else:
+            print('here')
             pass
+
+
         return ret
 
     def _codegen_OrExpr(self, ast_node, builder):
         ret = None
-        type = None
+        ltype = None
+        rtype=None
         if (isinstance(ast_node.lexpr, str)):
             lhs = self.GenTable.get_address(ast_node.lexpr)
             lhs = builder.load(lhs)
-            addr, type = self.GenTable.get_variable_addr_type(ast_node.lexpr)
-
+            addr, ltype = self.GenTable.get_variable_addr_type(ast_node.lexpr)
         else:
             lhs = self._codegen_(ast_node.lexpr, builder)
-            type = lhs.type
+            ltype = lhs.type
+            if(isinstance(ltype, ir.PointerType)):
+                lhs=builder.load(lhs)
+                ltype=lhs.type
+
         if (isinstance(ast_node.rexpr, str)):
             rhs = self.GenTable.get_address(ast_node.rexpr)
             rhs = builder.load(rhs)
+            addr,rtype=self.GenTable.get_variable_addr_type(ast_node.rexpr)
         else:
-
             rhs = self._codegen_(ast_node.rexpr, builder)
-        if isinstance(type, ir.IntType):
+            rtype=rhs.type
+            if (isinstance(rtype,  ir.PointerType)):
+                rhs = builder.load(rhs)
+                rtype =rhs.type
+
+        if isinstance(ltype, ir.IntType):
             ret = builder.or_(lhs, rhs)
         else:
             pass  ####error
@@ -646,24 +684,33 @@ class CodeGenerator(object):
 
     def _codegen_MulExpr(self, ast_node, builder):
         ret = None
-        type = None
+        ltype = None
+        rtype=None
         if (isinstance(ast_node.lexpr, str)):
             lhs = self.GenTable.get_address(ast_node.lexpr)
             lhs = builder.load(lhs)
-            addr, type = self.GenTable.get_variable_addr_type(ast_node.lexpr)
-
+            addr, ltype = self.GenTable.get_variable_addr_type(ast_node.lexpr)
         else:
             lhs = self._codegen_(ast_node.lexpr, builder)
-            type = lhs.type
+            ltype = lhs.type
+            if(isinstance(ltype, ir.PointerType)):
+                lhs=builder.load(lhs)
+                ltype=lhs.type
+
         if (isinstance(ast_node.rexpr, str)):
             rhs = self.GenTable.get_address(ast_node.rexpr)
             rhs = builder.load(rhs)
+            addr,rtype=self.GenTable.get_variable_addr_type(ast_node.rexpr)
         else:
-
             rhs = self._codegen_(ast_node.rexpr, builder)
-        if isinstance(type, ir.IntType):
+            rtype=rhs.type
+            if (isinstance(rtype,  ir.PointerType)):
+                rhs = builder.load(rhs)
+                rtype =rhs.type
+
+        if isinstance(ltype, ir.IntType):
             ret = builder.mul(lhs, rhs)
-        elif isinstance(type, ir.DoubleType):
+        elif isinstance(ltype, ir.DoubleType):
             ret = builder.fmul(lhs, rhs)
         else:
             pass  ####error
@@ -671,49 +718,66 @@ class CodeGenerator(object):
 
     def _codegen_DivExpr(self, ast_node, builder):
         ret = None
-        type = None
+        ltype = None
+        rtype=None
         if (isinstance(ast_node.lexpr, str)):
             lhs = self.GenTable.get_address(ast_node.lexpr)
             lhs = builder.load(lhs)
-            addr, type = self.GenTable.get_variable_addr_type(ast_node.lexpr)
-
+            addr, ltype = self.GenTable.get_variable_addr_type(ast_node.lexpr)
         else:
             lhs = self._codegen_(ast_node.lexpr, builder)
-            type = lhs.type
+            ltype = lhs.type
+            if(isinstance(ltype, ir.PointerType)):
+                lhs=builder.load(lhs)
+                ltype=lhs.type
+
         if (isinstance(ast_node.rexpr, str)):
             rhs = self.GenTable.get_address(ast_node.rexpr)
             rhs = builder.load(rhs)
+            addr,rtype=self.GenTable.get_variable_addr_type(ast_node.rexpr)
         else:
-
             rhs = self._codegen_(ast_node.rexpr, builder)
-        if isinstance(type, ir.IntType):
+            rtype=rhs.type
+            if (isinstance(rtype,  ir.PointerType)):
+                rhs = builder.load(rhs)
+                rtype =rhs.type
+
+        if isinstance(ltype, ir.IntType):
             ret = builder.sdiv(lhs, rhs)
-        elif isinstance(type, ir.DoubleType):
+        elif isinstance(ltype, ir.DoubleType):
             ret = builder.fdiv(lhs, rhs)
         else:
             pass  ####error
         return ret
 
     def _codegen_ModExpr(self, ast_node, builder):
-        ret = None
-        type = None
+        ltype = None
+        rtype = None
         if (isinstance(ast_node.lexpr, str)):
             lhs = self.GenTable.get_address(ast_node.lexpr)
             lhs = builder.load(lhs)
-            addr, type = self.GenTable.get_variable_addr_type(ast_node.lexpr)
-
+            addr, ltype = self.GenTable.get_variable_addr_type(ast_node.lexpr)
         else:
             lhs = self._codegen_(ast_node.lexpr, builder)
-            type = lhs.type
+            ltype = lhs.type
+            if (isinstance(ltype, ir.PointerType)):
+                lhs = builder.load(lhs)
+                ltype = lhs.type
+
         if (isinstance(ast_node.rexpr, str)):
             rhs = self.GenTable.get_address(ast_node.rexpr)
             rhs = builder.load(rhs)
+            addr, rtype = self.GenTable.get_variable_addr_type(ast_node.rexpr)
         else:
-
             rhs = self._codegen_(ast_node.rexpr, builder)
-        if isinstance(type, ir.IntType):
+            rtype = rhs.type
+            if (isinstance(rtype, ir.PointerType)):
+                rhs = builder.load(rhs)
+                rtype = rhs.type
+
+        if isinstance(ltype, ir.IntType):
             ret = builder.srem(lhs, rhs)
-        elif isinstance(type, ir.DoubleType):
+        elif isinstance(ltype, ir.DoubleType):
             ret = builder.frem(lhs, rhs)
         else:
             pass  ####error
@@ -721,22 +785,31 @@ class CodeGenerator(object):
 
     def _codegen_AndExpr(self, ast_node, builder):
         ret = None
-        type = None
+        ltype = None
+        rtype=None
         if (isinstance(ast_node.lexpr, str)):
             lhs = self.GenTable.get_address(ast_node.lexpr)
             lhs = builder.load(lhs)
-            addr, type = self.GenTable.get_variable_addr_type(ast_node.lexpr)
-
+            addr, ltype = self.GenTable.get_variable_addr_type(ast_node.lexpr)
         else:
             lhs = self._codegen_(ast_node.lexpr, builder)
-            type = lhs.type
+            ltype = lhs.type
+            if(isinstance(ltype, ir.PointerType)):
+                lhs=builder.load(lhs)
+                ltype=lhs.type
+
         if (isinstance(ast_node.rexpr, str)):
             rhs = self.GenTable.get_address(ast_node.rexpr)
             rhs = builder.load(rhs)
+            addr,rtype=self.GenTable.get_variable_addr_type(ast_node.rexpr)
         else:
-
             rhs = self._codegen_(ast_node.rexpr, builder)
-        if isinstance(type, ir.IntType):
+            rtype=rhs.type
+            if (isinstance(rtype,  ir.PointerType)):
+                rhs = builder.load(rhs)
+                rtype =rhs.type
+
+        if isinstance(ltype, ir.IntType):
             ret = builder.and_(lhs, rhs)
         else:
             pass  ####error
@@ -760,7 +833,15 @@ class CodeGenerator(object):
 
     def _codegen_UnaryExprNode(self, ast_node, builder):
         ret = None
-        val = self._codegen_(ast_node.factor, builder)
+        if (isinstance(ast_node.factor, str)):
+            val = self.GenTable.get_address(ast_node.factor)
+            val = builder.load(val)
+        else:
+
+            val = self._codegen_(ast_node.factor, builder)
+            rtype = val.type
+            if (isinstance(rtype, ir.PointerType)):
+                rhs = builder.load(val)
         if ast_node.op == '!':
             ret = builder.not_(val)
         elif ast_node.op == '-':
