@@ -48,7 +48,6 @@ if __name__ == '__main__':
     print("====================IR====================")
     f_ir = open('ir_code.txt', 'w')
     f_ir.write(llvm_ir)
-    print(llvm_ir)
     print("====================IR====================")
 
 
@@ -57,7 +56,20 @@ if __name__ == '__main__':
     asm = target_machine.emit_assembly(llvmmod)
 
     print("====================X86====================")
-    f_asm = open('asm_code.txt', 'w')
+    f_asm = open('asm_code.s', 'w')
     f_asm.write(asm)
-    print(asm)
     print("====================X86====================")
+
+    target = llvm.Target.from_default_triple()
+    target_machine = target.create_target_machine()
+    obj = target_machine.emit_object(llvmmod)
+    print("====================OBJ====================")
+    f_obj = open("obj_code.obj", "wb")
+    f_obj.write(obj)
+    print("====================OBJ====================")
+
+    
+    print("====================MCJLT====================")
+    jlt = llvm.create_mcjit_compiler(llvmmod, target_machine)
+    
+    print("====================MCJLT====================")

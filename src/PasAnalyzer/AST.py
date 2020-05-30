@@ -1,5 +1,6 @@
 treenode_tot = 0
 basic_tot = 0
+from PasGenerator.gentable import GenTable
 
 class AstNode(object):
     def __init__(self):
@@ -32,7 +33,7 @@ class AstNode(object):
             ' ' * indent_num, self.__class__.__name__)
 
     def type_check(self):
-        pass
+        return True
 
     def vis(self, file):
         global treenode_tot
@@ -101,6 +102,10 @@ class ProgramNode(AstNode):
         self.routine = routine
         self.program_head = program_head
         self.lineno = int(lineno)
+    
+    def type_check(self):
+        self.routine.type_check()
+        return True
 
 class ListNode(AstNode):
     def __init__(self, lineno = 0, node=None):
@@ -118,7 +123,11 @@ class ListNode(AstNode):
         for o in self.NodeList:
             if o is not None:
                 o.travel(indent_num + 2)
-
+    def type_check(self):
+        for son in self.NodeList:
+            if son:
+                son.type_check()
+        return True
 class ParaTypeListNode(AstNode):
     def __init__(self, lineno, var_list, type):
         super().__init__()
@@ -130,3 +139,11 @@ class ParaTypeListNode(AstNode):
 
     def append(self, node):
         self.NodeList.append(node)
+    
+    def type_check(self):
+        for son in self.NodeList:
+            if son:
+                son.type_check()
+        return True
+
+sym_table = GenTable()

@@ -1,4 +1,4 @@
-from PasAnalyzer.AST import ListNode,AstNode
+from PasAnalyzer.AST import ListNode, AstNode, sym_table
 
 
 # --------------------------ListNode-------------------------------------

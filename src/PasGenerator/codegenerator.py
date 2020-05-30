@@ -47,7 +47,7 @@ class CodeGenerator(object):
     def _codegen_(self, ast_node, builder):
         if (ast_node is None):
             return
-        print(ast_node.__class__.__name__)
+        # print(ast_node.__class__.__name__)
         return getattr(self, '_codegen_' + ast_node.__class__.__name__)(ast_node, builder)
 
     def register_writeln(self):

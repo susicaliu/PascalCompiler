@@ -26,7 +26,15 @@ class GenTable(object):
     def add_record(self, key_name, variable_name, address, variable_type, scope_id):
         self.variable_table.setdefault(key_name, {}).setdefault(variable_name, []).append((address, variable_type))
         self.variable_scope.setdefault(scope_id, []).append(variable_name)
-
+    
+    def has_vari(self, vari_name):
+        return self.variable_table.get(vari_name)
+    def has_reco(self, vari_name, key_name):
+        tmp = self.variable_table.get(vari_name)
+        if tmp:
+            return tmp.get(key_name)
+        else:
+            return None
     def get_type(self, type_name):
         res = self.type_table.get(type_name)
         if (res is not None):
@@ -56,6 +64,13 @@ class GenTable(object):
             else:
                 raise Exception("Error: {0} is not exist!".format(name2))
 
+        else:
+            raise Exception("Error: {0} is not exist!".format(name))
+    
+    def get_vari_type(self, name):
+        res = self.variable_table.get(name)
+        if (res is not None):
+            return res[-1][1]
         else:
             raise Exception("Error: {0} is not exist!".format(name))
 
