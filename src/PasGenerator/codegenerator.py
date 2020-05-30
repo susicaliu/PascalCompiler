@@ -11,7 +11,7 @@ from PasAnalyzer.vari import *
 
 from PasParser.parser import *
 
-from gentable import GenTable
+from PasGenerator.gentable import GenTable
 import llvmlite.ir as ir
 import llvmlite.binding as llvm
 from ctypes import CFUNCTYPE, c_double, c_int, c_void_p, cast, c_int32
@@ -47,7 +47,7 @@ class CodeGenerator(object):
     def _codegen_(self, ast_node, builder):
         if (ast_node is None):
             return
-        # print(ast_node.__class__.__name__)
+        print(ast_node.__class__.__name__)
         return getattr(self, '_codegen_' + ast_node.__class__.__name__)(ast_node, builder)
 
     def register_writeln(self):
@@ -153,17 +153,17 @@ class CodeGenerator(object):
     # ---------------------------------VariableNode-------------------------
     def _codegen_VariableNode(self, ast_node, builder):
         # id
-        variable_addr = self.GenTable.get_address(ast_node.id)
+        variable_addr = self.GenTable.get_address(ast_node.id, 0)
         return builder.load(variable_addr, name=ast_node.id)
 
     def _codegen_ArrayElementNode(self, ast_node, builder):
         # id  expression_array
-        variable_addr = self.GenTable.get_address(ast_node.id)
+        variable_addr = self.GenTable.get_address(ast_node.id, 0)
         array_index = []
 
         for index in ast_node.expression_array:
             if isinstance(index, str):
-                val_addr = self.GenTable.get_address(index)
+                val_addr = self.GenTable.get_address(index, 0)
                 val=builder.load(val_addr)
             else:
                 val = self._codegen_(index, builder)
@@ -175,7 +175,7 @@ class CodeGenerator(object):
 
     def _codegen_RecordElementNode(self, ast_node, builder):
         # id id2
-        variable_addr = self.GenTable.get_address(ast_node.id + '.' + ast_node.id2)  ####todo
+        variable_addr = self.GenTable.get_address(ast_node.id + '.' + ast_node.id2, 0)  ####todo
         return builder.load(variable_addr, name=ast_node.id2)
 
     def _codegen_ConstExprNode(self, ast_node, builder):
@@ -337,12 +337,12 @@ class CodeGenerator(object):
     def _codegen_AssignStmtNode(self, node, builder):
 
         if (isinstance(node.element_node,str)):
-            lhs = self.GenTable.get_address(node.element_node)
+            lhs = self.GenTable.get_address(node.element_node, 0)
         else:
             lhs = self._codegen_(node.element_node, builder)
 
         if (isinstance(node.expression, str)):
-            rhs = self.GenTable.get_address(node.expression)
+            rhs = self.GenTable.get_address(node.expression, 0)
         else:
             rhs = self._codegen_(node.expression, builder)
 
@@ -377,7 +377,7 @@ class CodeGenerator(object):
         self._codegen_(node.stmt_list, s_builder)
 
         if (isinstance(node.expression, str)):
-            end_expr_addr = self.GenTable.get_address(node.expression)
+            end_expr_addr = self.GenTable.get_address(node.expression, 0)
             end_expr = builder.load(end_expr_addr)
         else:
             end_expr = self._codegen_(node.expression, r_builder)
@@ -399,7 +399,7 @@ class CodeGenerator(object):
         w_builder = ir.IRBuilder(while_block)
 
         if (isinstance(node.expression, str)):
-            end_expr_addr = self.GenTable.get_address(node.expression)
+            end_expr_addr = self.GenTable.get_address(node.expression, 0)
             end_expr = builder.load(end_expr_addr)
         else:
             end_expr = self._codegen_(node.expression, w_builder)
@@ -418,13 +418,13 @@ class CodeGenerator(object):
         var_addr = self.add_new_variable(variable=node.name.id, variable_type=ir.IntType(32), builder=builder)
 
         if (isinstance(node.expression1, str)):
-            init_val_addr = self.GenTable.get_address(node.expression1)
+            init_val_addr = self.GenTable.get_address(node.expression1, 0)
             init_val = builder.load(init_val_addr)
         else:
             init_val = self._codegen_(node.expression1, builder)
 
         if (isinstance(node.expression2, str)):
-            final_val_addr = self.GenTable.get_address(node.expression2)
+            final_val_addr = self.GenTable.get_address(node.expression2, 0)
             final_val = builder.load(final_val_addr)
         else:
             final_val = self._codegen_(node.expression2, builder)
@@ -462,7 +462,7 @@ class CodeGenerator(object):
 
     def _codegen_CaseStmtNode(self, node, builder):
         if (isinstance(node.expression, str)):
-            expr_addr = self.GenTable.get_address(node.expression)
+            expr_addr = self.GenTable.get_address(node.expression, 0)
             expr = builder.load(expr_addr)
         else:
             expr = self._codegen_(node.expression, builder)
@@ -485,7 +485,7 @@ class CodeGenerator(object):
         builder.goto_block("goto_" + block_id)
 
     def _codegen_CallStmtNode(self, node, builder):
-        fn = self.GenTable.get_func(node.func_name)
+        fn = self.GenTable.get_address(node.func_name, 1)
         args = []
         for arg in node.args_list.NodeList:
             if (isinstance(arg, ConstValueNode)):
@@ -546,7 +546,7 @@ class CodeGenerator(object):
         ltype = None
         rtype=None
         if (isinstance(ast_node.lexpr, str)):
-            lhs = self.GenTable.get_address(ast_node.lexpr)
+            lhs = self.GenTable.get_address(ast_node.lexpr, 0)
             lhs = builder.load(lhs)
             addr, ltype = self.GenTable.get_variable_addr_type(ast_node.lexpr)
         else:
@@ -557,7 +557,7 @@ class CodeGenerator(object):
                 ltype=lhs.type
 
         if (isinstance(ast_node.rexpr, str)):
-            rhs = self.GenTable.get_address(ast_node.rexpr)
+            rhs = self.GenTable.get_address(ast_node.rexpr, 0)
             rhs = builder.load(rhs)
             addr,rtype=self.GenTable.get_variable_addr_type(ast_node.rexpr)
         else:
@@ -581,7 +581,7 @@ class CodeGenerator(object):
         ltype = None
         rtype = None
         if (isinstance(ast_node.lexpr, str)):
-            lhs = self.GenTable.get_address(ast_node.lexpr)
+            lhs = self.GenTable.get_address(ast_node.lexpr, 0)
             lhs = builder.load(lhs)
             addr, ltype = self.GenTable.get_variable_addr_type(ast_node.lexpr)
         else:
@@ -592,7 +592,7 @@ class CodeGenerator(object):
                 ltype = lhs.type
 
         if (isinstance(ast_node.rexpr, str)):
-            rhs = self.GenTable.get_address(ast_node.rexpr)
+            rhs = self.GenTable.get_address(ast_node.rexpr, 0)
             rhs = builder.load(rhs)
             addr, rtype = self.GenTable.get_variable_addr_type(ast_node.rexpr)
         else:
@@ -616,7 +616,7 @@ class CodeGenerator(object):
         ltype = None
         rtype=None
         if (isinstance(ast_node.lexpr, str)):
-            lhs = self.GenTable.get_address(ast_node.lexpr)
+            lhs = self.GenTable.get_address(ast_node.lexpr, 0)
             lhs = builder.load(lhs)
             addr, ltype = self.GenTable.get_variable_addr_type(ast_node.lexpr)
         else:
@@ -627,7 +627,7 @@ class CodeGenerator(object):
                 ltype=lhs.type
 
         if (isinstance(ast_node.rexpr, str)):
-            rhs = self.GenTable.get_address(ast_node.rexpr)
+            rhs = self.GenTable.get_address(ast_node.rexpr, 0)
             rhs = builder.load(rhs)
             addr,rtype=self.GenTable.get_variable_addr_type(ast_node.rexpr)
         else:
@@ -653,7 +653,7 @@ class CodeGenerator(object):
         ltype = None
         rtype=None
         if (isinstance(ast_node.lexpr, str)):
-            lhs = self.GenTable.get_address(ast_node.lexpr)
+            lhs = self.GenTable.get_address(ast_node.lexpr, 0)
             lhs = builder.load(lhs)
             addr, ltype = self.GenTable.get_variable_addr_type(ast_node.lexpr)
         else:
@@ -664,7 +664,7 @@ class CodeGenerator(object):
                 ltype=lhs.type
 
         if (isinstance(ast_node.rexpr, str)):
-            rhs = self.GenTable.get_address(ast_node.rexpr)
+            rhs = self.GenTable.get_address(ast_node.rexpr, 0)
             rhs = builder.load(rhs)
             addr,rtype=self.GenTable.get_variable_addr_type(ast_node.rexpr)
         else:
@@ -685,7 +685,7 @@ class CodeGenerator(object):
         ltype = None
         rtype=None
         if (isinstance(ast_node.lexpr, str)):
-            lhs = self.GenTable.get_address(ast_node.lexpr)
+            lhs = self.GenTable.get_address(ast_node.lexpr, 0)
             lhs = builder.load(lhs)
             addr, ltype = self.GenTable.get_variable_addr_type(ast_node.lexpr)
         else:
@@ -696,7 +696,7 @@ class CodeGenerator(object):
                 ltype=lhs.type
 
         if (isinstance(ast_node.rexpr, str)):
-            rhs = self.GenTable.get_address(ast_node.rexpr)
+            rhs = self.GenTable.get_address(ast_node.rexpr, 0)
             rhs = builder.load(rhs)
             addr,rtype=self.GenTable.get_variable_addr_type(ast_node.rexpr)
         else:
@@ -719,7 +719,7 @@ class CodeGenerator(object):
         ltype = None
         rtype=None
         if (isinstance(ast_node.lexpr, str)):
-            lhs = self.GenTable.get_address(ast_node.lexpr)
+            lhs = self.GenTable.get_address(ast_node.lexpr, 0)
             lhs = builder.load(lhs)
             addr, ltype = self.GenTable.get_variable_addr_type(ast_node.lexpr)
         else:
@@ -730,7 +730,7 @@ class CodeGenerator(object):
                 ltype=lhs.type
 
         if (isinstance(ast_node.rexpr, str)):
-            rhs = self.GenTable.get_address(ast_node.rexpr)
+            rhs = self.GenTable.get_address(ast_node.rexpr, 0)
             rhs = builder.load(rhs)
             addr,rtype=self.GenTable.get_variable_addr_type(ast_node.rexpr)
         else:
@@ -752,7 +752,7 @@ class CodeGenerator(object):
         ltype = None
         rtype = None
         if (isinstance(ast_node.lexpr, str)):
-            lhs = self.GenTable.get_address(ast_node.lexpr)
+            lhs = self.GenTable.get_address(ast_node.lexpr, 0)
             lhs = builder.load(lhs)
             addr, ltype = self.GenTable.get_variable_addr_type(ast_node.lexpr)
         else:
@@ -763,7 +763,7 @@ class CodeGenerator(object):
                 ltype = lhs.type
 
         if (isinstance(ast_node.rexpr, str)):
-            rhs = self.GenTable.get_address(ast_node.rexpr)
+            rhs = self.GenTable.get_address(ast_node.rexpr, 0)
             rhs = builder.load(rhs)
             addr, rtype = self.GenTable.get_variable_addr_type(ast_node.rexpr)
         else:
@@ -786,7 +786,7 @@ class CodeGenerator(object):
         ltype = None
         rtype=None
         if (isinstance(ast_node.lexpr, str)):
-            lhs = self.GenTable.get_address(ast_node.lexpr)
+            lhs = self.GenTable.get_address(ast_node.lexpr, 0)
             lhs = builder.load(lhs)
             addr, ltype = self.GenTable.get_variable_addr_type(ast_node.lexpr)
         else:
@@ -797,7 +797,7 @@ class CodeGenerator(object):
                 ltype=lhs.type
 
         if (isinstance(ast_node.rexpr, str)):
-            rhs = self.GenTable.get_address(ast_node.rexpr)
+            rhs = self.GenTable.get_address(ast_node.rexpr, 0)
             rhs = builder.load(rhs)
             addr,rtype=self.GenTable.get_variable_addr_type(ast_node.rexpr)
         else:
@@ -832,7 +832,7 @@ class CodeGenerator(object):
     def _codegen_UnaryExprNode(self, ast_node, builder):
         ret = None
         if (isinstance(ast_node.factor, str)):
-            val = self.GenTable.get_address(ast_node.factor)
+            val = self.GenTable.get_address(ast_node.factor, 0)
             val = builder.load(val)
         else:
 

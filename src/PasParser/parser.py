@@ -15,7 +15,7 @@ from PasError.mywarnings import *
 
 def p_program(p):
     'program : program_head  routine  SYM_PERIOD'
-    p[0] = ProgramNode(p[1],p[2])
+    p[0] = ProgramNode(p.lexer.lineno,  p[1],p[2])
 
 def p_program_head(p):
     'program_head : PAS_PROGRAM  ID  SYM_SEMICOLON'
@@ -23,15 +23,15 @@ def p_program_head(p):
 
 def p_routine(p):
     'routine : routine_head  routine_body'
-    p[0] = RoutineNode(p[1],p[2])
+    p[0] = RoutineNode(p.lexer.lineno, p[1],p[2])
 
 def p_sub_routine(p):
     'sub_routine : routine_head  routine_body'
-    p[0] = SubRoutineNode(p[1],p[2])
+    p[0] = SubRoutineNode(p.lexer.lineno, p[1],p[2])
 
 def p_routine_head(p):
     'routine_head : label_part  const_part  type_part  var_part  routine_part'
-    p[0] = RoutineHeadNode(p[1],p[2],p[3],p[4],p[5])
+    p[0] = RoutineHeadNode(p.lexer.lineno, p[1],p[2],p[3],p[4],p[5])
 
 ########################Label Part########################
 def p_label_part(p):
@@ -50,42 +50,42 @@ def p_const_part_1(p):
 def p_const_expr_list_0(p):
     'const_expr_list : const_expr_list  ID  SYM_EQ  const_value  SYM_SEMICOLON'
     p[0] = p[1]
-    p[0].append(ConstExprNode(VariableNode(p[2],'const'),p[4])) ### ConstID
+    p[0].append(ConstExprNode(p.lexer.lineno, VariableNode(p.lexer.lineno, p[2],'const'),p[4])) ### ConstID
 
 def p_const_expr_list_1(p):
     'const_expr_list : ID  SYM_EQ  const_value  SYM_SEMICOLON'
-    p[0] = ConstExprListNode(ConstExprNode(VariableNode(p[1],'const'),p[3])) ### constID
+    p[0] = ConstExprListNode(p.lexer.lineno, ConstExprNode(p.lexer.lineno, VariableNode(p.lexer.lineno, p[1],'const'),p[3])) ### constID
 
 def p_const_expr_list_2(p):
     'const_expr_list : const_expr_list  ID  SYM_EQ  SYM_SUB const_value  SYM_SEMICOLON'
     p[0] = p[1]
     p[5].reverse()
-    p[0].append(ConstExprNode(VariableNode(p[2],'const'),p[5])) ### ConstID
+    p[0].append(ConstExprNode(p.lexer.lineno, VariableNode(p.lexer.lineno, p[2],'const'),p[5])) ### ConstID
 
 def p_const_expr_list_3(p):
     'const_expr_list : ID  SYM_EQ  SYM_SUB  const_value  SYM_SEMICOLON'
     p[4].reverse()
-    p[0] = ConstExprListNode(ConstExprNode(VariableNode(p[1],'const'),p[4])) ### constID
+    p[0] = ConstExprListNode(p.lexer.lineno, ConstExprNode(p.lexer.lineno, VariableNode(p.lexer.lineno, p[1],'const'),p[4])) ### constID
 
 def p_const_value_0(p):
     'const_value : INT'
-    p[0] = ConstValueNode('int',p[1]);
+    p[0] = ConstValueNode(p.lexer.lineno, 'int',p[1]);
 
 def p_const_value_1(p):
     'const_value : REAL'
-    p[0] = ConstValueNode('real',p[1]);
+    p[0] = ConstValueNode(p.lexer.lineno, 'real',p[1]);
 
 def p_const_value_2(p):
     'const_value : CHAR'
-    p[0] = ConstValueNode('char',p[1]);
+    p[0] = ConstValueNode(p.lexer.lineno, 'char',p[1]);
 
 def p_const_value_3(p):
     'const_value : STR'
-    p[0] = ConstValueNode('str',p[1]);
+    p[0] = ConstValueNode(p.lexer.lineno, 'str',p[1]);
 
 def p_const_value_4(p):
     'const_value : SYS_CON' 
-    p[0] = ConstValueNode('syscon',p[1]);
+    p[0] = ConstValueNode(p.lexer.lineno, 'syscon',p[1]);
 
 ########################Type Part########################
 def p_type_part_0(p):
@@ -103,11 +103,11 @@ def p_type_decl_list_0(p):
 
 def p_type_decl_list_1(p):
     'type_decl_list : type_definition'
-    p[0] = TypeDeclListNode(p[1])
+    p[0] = TypeDeclListNode(p.lexer.lineno, p[1])
 
 def p_type_definition(p):
     'type_definition : ID  SYM_EQ  type_decl  SYM_SEMICOLON'
-    p[0] = TypeDefinitionNode(VariableNode(p[1],'type'),p[3]) ### ConstID
+    p[0] = TypeDefinitionNode(p.lexer.lineno, VariableNode(p.lexer.lineno, p[1],'type'),p[3]) ### ConstID
 
 def p_type_decl_0(p):
     'type_decl : simple_type_decl'
@@ -123,44 +123,44 @@ def p_type_decl_2(p):
 
 def p_simple_type_decl_0(p):
     'simple_type_decl : SYS_TYPE'
-    p[0] = SimpleTypeDeclNode(p[1])
+    p[0] = SimpleTypeDeclNode(p.lexer.lineno, p[1])
 
 def p_simple_type_decl_1(p):
     'simple_type_decl : ID'
-    p[0] = VariableTypeDeclNode(p[1])
+    p[0] = VariableTypeDeclNode(p.lexer.lineno, p[1])
 
 def p_simple_type_decl_2(p):
     'simple_type_decl : SYM_LPAREN  name_list  SYM_RPAREN '
     p[2].set_type('enum')
-    p[0] = EnumTypeDeclNode(p[2])
+    p[0] = EnumTypeDeclNode(p.lexer.lineno, p[2])
 
 def p_simple_type_decl_3(p):
     'simple_type_decl : const_value  SYM_RANGE  const_value  '
-    p[0] = RangeTypeDeclNode(p[1],p[3])
+    p[0] = RangeTypeDeclNode(p.lexer.lineno, p[1],p[3])
 
 def p_simple_type_decl_4(p):
     'simple_type_decl : SYM_SUB  const_value  SYM_RANGE  const_value'
     p[2].reverse()
-    p[0] = RangeTypeDeclNode(p[2],p[4])
+    p[0] = RangeTypeDeclNode(p.lexer.lineno, p[2],p[4])
 
 def p_simple_type_decl_5(p):
     'simple_type_decl : SYM_SUB  const_value  SYM_RANGE  SYM_SUB  const_value'
     p[2].reverse()
     p[4].reverse()
-    p[0] = RangeTypeDeclNode(p[2],p[4])
+    p[0] = RangeTypeDeclNode(p.lexer.lineno, p[2],p[4])
 
 def p_simple_type_decl_6(p):
     'simple_type_decl : ID  SYM_RANGE  ID'
-    p[0] = RangeTypeDeclNode(p[1],p[3])
+    p[0] = RangeTypeDeclNode(p.lexer.lineno, p[1],p[3])
 
 def p_array_type_decl(p):
     'array_type_decl : PAS_ARRAY  SYM_LBRAC  simple_type_decl  SYM_RBRAC  PAS_OF  type_decl'
-    p[0] = ArrayTypeDeclNode(p[3],p[6])
+    p[0] = ArrayTypeDeclNode(p.lexer.lineno, p[3],p[6])
     ###ERROR simple_type_decl可能有问题
 
 def p_record_type_decl(p):
     'record_type_decl : PAS_RECORD  field_decl_list  PAS_END'
-    p[0] = RecordTypeDeclNode(p[2])
+    p[0] = RecordTypeDeclNode(p.lexer.lineno, p[2])
     
 def p_field_decl_list_0(p):
     'field_decl_list : field_decl_list  field_decl'
@@ -169,21 +169,21 @@ def p_field_decl_list_0(p):
 
 def p_field_decl_list_1(p):
     'field_decl_list : field_decl'
-    p[0] = FieldDeclListNode(p[1])
+    p[0] = FieldDeclListNode(p.lexer.lineno, p[1])
 
 def p_field_decl(p):
     'field_decl : name_list  SYM_COLON  type_decl  SYM_SEMICOLON'
     p[1].set_type('field');
-    p[0] = FieldDeclNode(p[1],p[3])
+    p[0] = FieldDeclNode(p.lexer.lineno, p[1],p[3])
 
 def p_name_list_0(p):
     'name_list : name_list  SYM_COMMA  ID'
     p[0] = p[1]
-    p[0].append(VariableNode(p[3],'variable'))
+    p[0].append(VariableNode(p.lexer.lineno, p[3],'variable'))
 
 def p_name_list_1(p):
     'name_list : ID'
-    p[0] = NameListNode(VariableNode(p[1],'variable'))
+    p[0] = NameListNode(p.lexer.lineno, VariableNode(p.lexer.lineno, p[1],'variable'))
 
 ###############################Var Part###########################
 def p_var_part_0(p):
@@ -201,11 +201,11 @@ def p_var_decl_list_0(p):
 
 def p_var_decl_list_1(p):
     'var_decl_list : var_decl'
-    p[0] = VarDeclListNode(p[1])
+    p[0] = VarDeclListNode(p.lexer.lineno, p[1])
 
 def p_var_decl(p):
     'var_decl :  name_list  SYM_COLON  type_decl  SYM_SEMICOLON'
-    p[0] = VarDeclNode(p[1],p[3])
+    p[0] = VarDeclNode(p.lexer.lineno, p[1],p[3])
 
 ############################Function & Procedure part####################
 def p_routine_part_0(p):
@@ -220,11 +220,11 @@ def p_routine_part_1(p):
 
 def p_routine_part_2(p):
     'routine_part : function_decl'
-    p[0] = RoutineDeclListNode(p[1],'func') 
+    p[0] = RoutineDeclListNode(p.lexer.lineno, p[1],'func') 
 
 def p_routine_part_3(p):
     'routine_part : procedure_decl'
-    p[0] = RoutineDeclListNode(p[1],'proc') 
+    p[0] = RoutineDeclListNode(p.lexer.lineno, p[1],'proc') 
 
 def p_routine_part_4(p):
     'routine_part : empty'
@@ -232,19 +232,19 @@ def p_routine_part_4(p):
 
 def p_function_decl(p):
     'function_decl : function_head  SYM_SEMICOLON  sub_routine  SYM_SEMICOLON'
-    p[0] = FunctionDeclNode(p[1],p[3])
+    p[0] = FunctionDeclNode(p.lexer.lineno, p[1],p[3])
 
 def p_function_head(p):
     'function_head :  PAS_FUNCTION  ID  parameters  SYM_COLON  simple_type_decl '
-    p[0] = FunctionHeadNode(VariableNode(p[2],'func'),p[3],p[5])
+    p[0] = FunctionHeadNode(p.lexer.lineno, VariableNode(p.lexer.lineno, p[2],'func'),p[3],p[5])
 
 def p_procedure_decl(p):
     'procedure_decl :  procedure_head  SYM_SEMICOLON  sub_routine  SYM_SEMICOLON'
-    p[0] = ProcedureDeclNode(p[1],p[3])
+    p[0] = ProcedureDeclNode(p.lexer.lineno, p[1],p[3])
 
 def p_procedure_head(p):
     'procedure_head : PAS_PROCEDURE ID parameters '
-    p[0] = ProcedureHeadNode(VariableNode(p[2],'proc'),p[3])
+    p[0] = ProcedureHeadNode(p.lexer.lineno, VariableNode(p.lexer.lineno, p[2],'proc'),p[3])
 
 def p_parameters_0(p):
     'parameters : SYM_LPAREN  para_decl_list  SYM_RPAREN'
@@ -261,15 +261,15 @@ def p_para_decl_list_0(p):
 
 def p_para_decl_list_1(p):
     'para_decl_list : para_type_list'
-    p[0] = ParaDeclListNode(p[1])
+    p[0] = ParaDeclListNode(p.lexer.lineno, p[1])
 
 def p_para_type_list_0(p):
     'para_type_list : var_para_list SYM_COLON simple_type_decl  '
-    p[0] = ParaTypeListNode(p[1],p[3])
+    p[0] = ParaTypeListNode(p.lexer.lineno, p[1],p[3])
 
 def p_para_type_list_1(p):
     'para_type_list : val_para_list  SYM_COLON  simple_type_decl'
-    p[0] = ParaTypeListNode(p[1],p[3])
+    p[0] = ParaTypeListNode(p.lexer.lineno, p[1],p[3])
 
 def p_var_para_list(p):
     'var_para_list : PAS_VAR  name_list'
@@ -296,7 +296,7 @@ def p_stmt_list_0(p):
         p[0] = p[1]
         p[0].append(p[2])
     else:
-        p[0] = StmtListNode(p[2])
+        p[0] = StmtListNode(p.lexer.lineno, p[2])
 
 def p_stmt_list_1(p):
     'stmt_list : empty'
@@ -304,11 +304,11 @@ def p_stmt_list_1(p):
 
 def p_stmt_0(p):
     'stmt : INT  SYM_COLON  non_label_stmt'
-    p[0] = StmtNode(p[3],p[1])
+    p[0] = StmtNode(p.lexer.lineno, p[3],p[1])
 
 def p_stmt_1(p):
     'stmt : non_label_stmt'
-    p[0] = StmtNode(p[1],None)
+    p[0] = StmtNode(p.lexer.lineno, p[1],None)
 
 def p_non_label_stmt_0(p):
     'non_label_stmt : assign_stmt'
@@ -348,39 +348,39 @@ def p_non_label_stmt_8(p):
 
 def p_assign_stmt_0(p):
     'assign_stmt : ID  SYM_ASSIGN  expression'
-    p[0] = AssignStmtNode(p[1],p[3])
+    p[0] = AssignStmtNode(p.lexer.lineno, p[1],p[3])
 
 def p_assign_stmt_1(p):
     'assign_stmt : ID SYM_LBRAC expression SYM_RBRAC SYM_ASSIGN expression'
-    p[0] = AssignStmtNode(ArrayElementNode(p[1],[p[3]]),p[6])
+    p[0] = AssignStmtNode(p.lexer.lineno, ArrayElementNode(p.lexer.lineno, p[1],[p[3]]),p[6])
 
 def p_assign_stmt_2(p):
     'assign_stmt : ID  SYM_PERIOD  ID  SYM_ASSIGN  expression'
-    p[0] = AssignStmtNode(RecordElementNode(p[1],p[3]),p[5]) 
+    p[0] = AssignStmtNode(p.lexer.lineno, RecordElementNode(p.lexer.lineno, p[1],p[3]),p[5]) 
 
 def p_proc_stmt_0(p):
     'proc_stmt : ID'
-    p[0] = CallStmtNode(p[1],None)###
+    p[0] = CallStmtNode(p.lexer.lineno, p[1],None)###
 
 def p_proc_stmt_1(p):
     'proc_stmt : ID  SYM_LPAREN  args_list  SYM_RPAREN'
-    p[0] = CallStmtNode(p[1],p[3])
+    p[0] = CallStmtNode(p.lexer.lineno, p[1],p[3])
 
 def p_proc_stmt_2(p):
     'proc_stmt : SYS_PROC'
-    p[0] = p[1]
+    p[0] = CallStmtNode(p.lexer.lineno, p[1],None)
 
 def p_proc_stmt_3(p):
     'proc_stmt : SYS_PROC  SYM_LPAREN  expression_list  SYM_RPAREN'
-    p[0] = CallStmtNode(p[1],p[3])
+    p[0] = CallStmtNode(p.lexer.lineno, p[1],p[3])
 
 def p_proc_stmt_4(p):
     'proc_stmt : PAS_READ  SYM_LPAREN  factor  SYM_RPAREN'
-    p[0] = CallStmtNode(p[1],p[3])###factor must be id
+    p[0] = CallStmtNode(p.lexer.lineno, p[1],p[3])###factor must be id
 
 def p_if_stmt(p):
     'if_stmt : PAS_IF  expression  PAS_THEN  stmt  else_clause'
-    p[0] = IfStmtNode(p[2],p[4],p[5])
+    p[0] = IfStmtNode(p.lexer.lineno, p[2],p[4],p[5])
 
 def p_else_clause_0(p):
     'else_clause : PAS_ELSE stmt'
@@ -392,51 +392,51 @@ def p_else_clause_1(p):
 
 def p_repeat_stmt(p):
     'repeat_stmt : PAS_REPEAT  stmt_list  PAS_UNTIL  expression'
-    p[0] = RepeatStmtNode(p[2],p[4])
+    p[0] = RepeatStmtNode(p.lexer.lineno, p[2],p[4])
 
 def p_while_stmt(p):
     'while_stmt : PAS_WHILE  expression  PAS_DO stmt'
-    p[0] = WhileStmtNode(p[2],p[4])
+    p[0] = WhileStmtNode(p.lexer.lineno, p[2],p[4])
 
 def p_for_stmt(p):
     'for_stmt : PAS_FOR  ID  SYM_ASSIGN  expression  direction  expression PAS_DO stmt'
-    p[0] = ForStmtNode(VariableNode(p[2],'for'),p[4],p[5],p[6],p[8]) ###
+    p[0] = ForStmtNode(p.lexer.lineno, VariableNode(p.lexer.lineno, p[2],'for'),p[4],p[5],p[6],p[8]) ###
 
 def p_direction_0(p):
     'direction : PAS_TO'
-    p[0] = ConstValueNode('int',1)
+    p[0] = ConstValueNode(p.lexer.lineno, 'int',1)
 
 def p_direction_1(p):
     'direction : PAS_DOWNTO'
-    p[0] = ConstValueNode('int',-1)
+    p[0] = ConstValueNode(p.lexer.lineno, 'int',-1)
 
 def p_case_stmt(p):
     'case_stmt : PAS_CASE expression PAS_OF case_expr_list  PAS_END'
-    p[0] = CaseStmtNode(p[2],p[4])
+    p[0] = CaseStmtNode(p.lexer.lineno, p[2],p[4])
 
 def p_case_expr_list_0(p):
     'case_expr_list : case_expr_list  case_expr'
     if p[1] is None:
-        p[0] = CaseExprListNode(p[2]) ###
+        p[0] = CaseExprListNode(p.lexer.lineno, p[2]) ###
     else:
         p[0] = p[1]
         p[0].append(p[2])
     
 def p_case_expr_list_1(p):
     'case_expr_list : case_expr'
-    p[0] = CaseExprListNode(p[1])
+    p[0] = CaseExprListNode(p.lexer.lineno, p[1])
 
 def p_case_expr_0(p):
     'case_expr : const_value  SYM_COLON  stmt  SYM_SEMICOLON'
-    p[0] = CaseExprNode(p[1],p[3])
+    p[0] = CaseExprNode(p.lexer.lineno, p[1],p[3])
 
 def p_case_expr_1(p):
     'case_expr : ID  SYM_COLON  stmt  SYM_SEMICOLON'
-    p[0] = CaseExprNode(p[1],p[3])
+    p[0] = CaseExprNode(p.lexer.lineno, p[1],p[3])
 
 def p_goto_stmt(p):
     'goto_stmt : PAS_GOTO  INT'
-    p[0] = GotoStmtNode(p[2]);
+    p[0] = GotoStmtNode(p.lexer.lineno, p[2]);
     pass###
 
 def p_expression_list_0(p):
@@ -447,31 +447,31 @@ def p_expression_list_0(p):
 
 def p_expression_list_1(p):
     'expression_list : expression'
-    p[0] = ExprListNode(p[1])
+    p[0] = ExprListNode(p.lexer.lineno, p[1])
 
 def p_expression_0(p):
     'expression : expression  SYM_GE  expr'
-    p[0] = BinaryExprNode('>=',p[1],p[3])
+    p[0] = BinaryExprNode(p.lexer.lineno, '>=',p[1],p[3])
 
 def p_expression_1(p):
     'expression : expression  SYM_GT  expr'
-    p[0] = BinaryExprNode('>',p[1],p[3])
+    p[0] = BinaryExprNode(p.lexer.lineno, '>',p[1],p[3])
 
 def p_expression_2(p):
     'expression : expression  SYM_LE  expr'
-    p[0] = BinaryExprNode('<=',p[1],p[3])
+    p[0] = BinaryExprNode(p.lexer.lineno, '<=',p[1],p[3])
 
 def p_expression_3(p):
     'expression : expression  SYM_LT  expr'
-    p[0] = BinaryExprNode('<',p[1],p[3])
+    p[0] = BinaryExprNode(p.lexer.lineno, '<',p[1],p[3])
 
 def p_expression_4(p):
     'expression : expression  SYM_EQ  expr  '
-    p[0] = BinaryExprNode('==',p[1],p[3])
+    p[0] = BinaryExprNode(p.lexer.lineno, '==',p[1],p[3])
 
 def p_expression_5(p):
     'expression : expression  SYM_NE  expr'
-    p[0] = BinaryExprNode('!=',p[1],p[3])
+    p[0] = BinaryExprNode(p.lexer.lineno, '!=',p[1],p[3])
 
 def p_expression_6(p):
     'expression : expr'
@@ -479,15 +479,15 @@ def p_expression_6(p):
 
 def p_expr_0(p):
     'expr : expr  SYM_ADD  term'
-    p[0] = BinaryExprNode('+',p[1],p[3])
+    p[0] = BinaryExprNode(p.lexer.lineno, '+',p[1],p[3])
 
 def p_expr_1(p):
     'expr : expr  SYM_SUB  term'
-    p[0] = BinaryExprNode('-',p[1],p[3])
+    p[0] = BinaryExprNode(p.lexer.lineno, '-',p[1],p[3])
 
 def p_expr_2(p):
     'expr : expr  PAS_OR  term'
-    p[0] = BinaryExprNode('|',p[1],p[3])
+    p[0] = BinaryExprNode(p.lexer.lineno, '|',p[1],p[3])
 
 def p_expr_3(p):
     'expr : term'
@@ -495,19 +495,19 @@ def p_expr_3(p):
 
 def p_term_0(p):
     'term : term  SYM_MUL  factor'
-    p[0] = BinaryExprNode('*',p[1],p[3])
+    p[0] = BinaryExprNode(p.lexer.lineno, '*',p[1],p[3])
 
 def p_term_1(p):
     'term : term  SYM_DIV  factor'
-    p[0] = BinaryExprNode('/',p[1],p[3])
+    p[0] = BinaryExprNode(p.lexer.lineno, '/',p[1],p[3])
 
 def p_term_2(p):
     'term : term  PAS_MOD  factor '
-    p[0] = BinaryExprNode('%',p[1],p[3])
+    p[0] = BinaryExprNode(p.lexer.lineno, '%',p[1],p[3])
 
 def p_term_3(p):
     'term : term  PAS_AND  factor'
-    p[0] = BinaryExprNode('&',p[1],p[3])
+    p[0] = BinaryExprNode(p.lexer.lineno, '&',p[1],p[3])
 
 def p_term_4(p):
     'term   : factor'
@@ -519,15 +519,15 @@ def p_factor_0(p):
 
 def p_factor_1(p):
     'factor : ID  SYM_LPAREN  args_list  SYM_RPAREN'
-    p[0] = CallStmtNode(p[1],p[3])
+    p[0] = CallStmtNode(p.lexer.lineno, p[1],p[3])
 
 def p_factor_2(p):
     'factor : SYS_FUNCT'
-    p[0] = CallStmtNode(p[1],None)
+    p[0] = CallStmtNode(p.lexer.lineno, p[1],None)
 
 def p_factor_3(p):
     'factor : SYS_FUNCT  SYM_LPAREN  args_list  SYM_RPAREN'
-    p[0] = CallStmtNode(p[1],p[3])
+    p[0] = CallStmtNode(p.lexer.lineno, p[1],p[3])
 
 def p_factor_4(p):
     'factor : const_value'
@@ -539,19 +539,19 @@ def p_factor_5(p):
 
 def p_factor_6(p):
     'factor : PAS_NOT  factor'
-    p[0] = UnaryExprNode('!',p[2])
+    p[0] = UnaryExprNode(p.lexer.lineno, '!',p[2])
 
 def p_factor_7(p):
     'factor : SYM_SUB  factor'
-    p[0] = UnaryExprNode('-',p[2])
+    p[0] = UnaryExprNode(p.lexer.lineno, '-',p[2])
 
 def p_factor_8(p):
     'factor : ID  SYM_LBRAC  expression  SYM_RBRAC'
-    p[0] = ArrayElementNode(p[1],[p[3]])
+    p[0] = ArrayElementNode(p.lexer.lineno, p[1],[p[3]])
 
 def p_factor_9(p):
     'factor : ID  SYM_PERIOD  ID'
-    p[0] = RecordElementNode(p[1],p[3])
+    p[0] = RecordElementNode(p.lexer.lineno, p[1],p[3])
 
 def p_args_list_0(p):
     'args_list : args_list  SYM_COMMA  expression'
@@ -560,15 +560,17 @@ def p_args_list_0(p):
 
 def p_args_list_1(p):
     'args_list : expression'
-    p[0] = ArgsListNode(p[1])
+    p[0] = ArgsListNode(p.lexer.lineno, p[1])
 
 def p_empty(p):
     'empty : '
     p[0] = None
 
 def p_error(p):
-    print("ERROR 0: Syntax error!", p)
-    raise SyntxError(["Syntax error: %s at line %d, col %d." % (p.value, p.lineno, find_column(p.lexer.lexdata,p))])
+    print("Syntax error: %s at line %d, col %d." % (p.value, p.lineno, find_column(p.lexer.lexdata,p)))
+    p.lexer.skip(1)
+    SyntxError(p.value, p.lineno, find_column(p.lexer.lexdata,p)).log()
+    # raise SyntxError(["Syntax error: %s at line %d, col %d." % (p.value, p.lineno, find_column(p.lexer.lexdata,p))])
 
 def find_column(input, t):
      line_start = input.rfind('\n', 0, t.lexpos) + 1

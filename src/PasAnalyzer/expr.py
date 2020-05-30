@@ -3,29 +3,32 @@ from PasAnalyzer.AST import AstNode
 
 # ---------------------------------ExpressionNode-------------------------
 class ConstExprNode(AstNode):
-    def __init__(self, _id, const_value):
+    def __init__(self, lineno, _id, const_value):
         super().__init__()
+        self.lineno = int(lineno)
         self.id = _id
         self.const_value = const_value
 
-
 class CaseExprNode(AstNode):
-    def __init__(self, const_value, stmt):
+    def __init__(self, lineno, const_value, stmt):
         super().__init__()
+        self.lineno = int(lineno)
         self.const_value = const_value
         self.stmt = stmt
 
 
 class BinaryExprNode(AstNode):
-    def __init__(self, op, lexpr, rexpr):
+    def __init__(self, lineno, op, lexpr, rexpr):
         super().__init__()
+        self.lineno = int(lineno)
         self.op = op
         self.lexpr = lexpr
         self.rexpr = rexpr
 
 
 class UnaryExprNode(AstNode):
-    def __init__(self, op, factor):
+    def __init__(self, lineno, op, factor):
         super().__init__()
+        self.lineno = int(lineno)
         self.op = op
         self.factor = factor

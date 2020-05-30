@@ -6,6 +6,7 @@ class AstNode(object):
         super().__init__()
         self.cnt = 0
         self.type = ''
+        self.lineno = 0
 
     def gattrs(self):
         return [i for i in dir(self) if not callable(getattr(self, i)) and not i.startswith('__')]
@@ -45,6 +46,8 @@ class AstNode(object):
                 else:
                     if son is self.cnt:
                         continue
+                    elif son is self.lineno:
+                        continue
                     else:
                         self.print_basic(son, file)
         else:
@@ -56,6 +59,8 @@ class AstNode(object):
                     self.print_link(son, file)
                 else:
                     if son is self.cnt:
+                        continue
+                    elif son is self.lineno:
                         continue
                     else:
                         self.print_basic(son, file)
@@ -74,22 +79,34 @@ class AstNode(object):
         basic_tot += 1
         if isinstance(v, str) and len(v) < 1: 
             return
+        if isinstance(v, list):
+            v = v[0]
+        
         if v == '+':
             v = 'add'
+        elif v == '-':
+            v = 'sub'
+        elif v == '*':
+            v = 'mul'
+        elif v == '/':
+            v = 'div'
+
         file.write('TN' + str(self.cnt) + '->BS' + str(basic_tot) + ';\n')
         file.write('BS' + str(basic_tot) + '[shape=oval,label=' + str(v) + '];\n')
 
 
 class ProgramNode(AstNode):
-    def __init__(self, program_head, routine):
+    def __init__(self, lineno, program_head, routine):
         super().__init__()
         self.routine = routine
         self.program_head = program_head
+        self.lineno = int(lineno)
 
 class ListNode(AstNode):
-    def __init__(self, node=None):
+    def __init__(self, lineno = 0, node=None):
         super().__init__()
         self.NodeList = []
+        self.lineno = int(lineno)
         if node is not None:
             self.NodeList.append(node)
 
@@ -103,8 +120,9 @@ class ListNode(AstNode):
                 o.travel(indent_num + 2)
 
 class ParaTypeListNode(AstNode):
-    def __init__(self, var_list, type):
+    def __init__(self, lineno, var_list, type):
         super().__init__()
+        self.lineno = int(lineno)
         self.type = type
         self.NodeList = []
         if var_list is not None:

@@ -3,29 +3,29 @@ import llvmlite.ir as ir
 
 class GenTable(object):
     def __init__(self):
-        self.variable_table = {}
-        self.record_table = {}
         self.type_table = {}
+        self.variable_table = {}
         self.func_table = {}
 
-        self.variable_scope = {}
         self.type_scope = {}
+        self.variable_scope = {}
         self.func_scope = {}
-
-    def add_variable(self, variable_name, address, variable_type, scope_id):
-        self.variable_table.setdefault(variable_name, []).append((address, variable_type))
-        self.variable_scope.setdefault(scope_id, []).append(variable_name)
 
     def add_type(self, variable_name, variable_type, scope_id):
         self.type_table.setdefault(variable_name, []).append(variable_type)
         self.type_scope.setdefault(scope_id, []).append(variable_name)
 
+    def add_variable(self, variable_name, address, variable_type, scope_id):
+        self.variable_table.setdefault(variable_name, []).append((address, variable_type))
+        self.variable_scope.setdefault(scope_id, []).append(variable_name)
+
     def add_function(self, func_name, func_block, scope_id):
         self.func_table.setdefault(func_name, []).append(func_block)
         self.func_scope.setdefault(scope_id, []).append(func_name)
 
-    def add_record_variable(self, key_name, variable_name, address, variable_type):
+    def add_record(self, key_name, variable_name, address, variable_type, scope_id):
         self.variable_table.setdefault(key_name, {}).setdefault(variable_name, []).append((address, variable_type))
+        self.variable_scope.setdefault(scope_id, []).append(variable_name)
 
     def get_type(self, type_name):
         res = self.type_table.get(type_name)
@@ -66,7 +66,7 @@ class GenTable(object):
         else:
             raise Exception("Error: {0} is not exist!".format(name))
 
-    def get_func(self, name):
+    def get_function_addr(self, name):
         res = self.func_table.get(name)
         if (res is not None):
             res = res[-1]
@@ -81,8 +81,13 @@ class GenTable(object):
         else:
             raise Exception("Error: {0} is not exist!".format(name))
 
-    def get_address(self, _id):
-        res = self.get_variable_addr(_id)
+    def get_address(self, _id, opcode = 0):
+        if opcode == 0:
+            res = self.get_variable_addr(_id)
+        elif opcode == 1:
+            res = self.get_function_addr(_id)
+        else:
+            raise Exception("Error: {0} is not exist!".format(_id))
         return res
 
     def delete_scope(self, scope_id):

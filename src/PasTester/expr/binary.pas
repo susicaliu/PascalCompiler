@@ -1,0 +1,32 @@
+program test_binary_expr;
+var i,a,b,c,s: integer;
+    bool1,bool2: boolean;
+begin
+  a:=1;
+  b:=2;
+  bool1:=true;
+  bool2:=false;
+  a:=a-b;
+  a:=a+b;
+  a:=a*b;
+  a:=a/b;
+  a:=a mod b;
+  a:=1-b;
+  a:=1+b;
+  a:=1*b;
+  a:=1/b;
+  a:=1 mod b;
+  a:=1-2;
+  a:=1+2;
+  a:=1*2;
+  a:=1/2;
+  a:=1 mod 2;
+  bool1:=a>=b;
+  bool1:=a>b;
+  bool1:=a<=b;
+  bool1:=a<b;
+  bool1:=a!=b;
+  bool1:=bool1 or bool2;
+  bool1:=bool1 and bool2;
+  bool1:=not bool2;
+end.

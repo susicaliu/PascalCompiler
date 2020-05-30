@@ -3,32 +3,31 @@ from PasAnalyzer.AST import ListNode,AstNode
 
 # --------------------------ListNode-------------------------------------
 class ConstExprListNode(ListNode):
-    def __init__(self, node):
-        super().__init__(node)
-
+    def __init__(self, lineno, node):
+        super().__init__(lineno, node)
 
 class TypeDeclListNode(ListNode):
-    def __init__(self, node):
-        super().__init__(node)
+    def __init__(self, lineno, node):
+        super().__init__(lineno, node)
 
 
 class FieldDeclListNode(ListNode):
-    def __init__(self, node):
-        super().__init__(node)
+    def __init__(self, lineno, node):
+        super().__init__(lineno, node)
 
 
 class VarDeclListNode(ListNode):
-    def __init__(self, node):
-        super().__init__(node)
+    def __init__(self, lineno, node):
+        super().__init__(lineno, node)
 
 class ParaDeclListNode(ListNode):
-    def __init__(self, node):
-        super().__init__(node)
+    def __init__(self, lineno, node):
+        super().__init__(lineno, node)
 
 
 class NameListNode(ListNode):
-    def __init__(self, node):
-        super().__init__(node)
+    def __init__(self, lineno, node):
+        super().__init__(lineno, node)
 
     def set_type(self, _type_name):
         for var in self.NodeList:
@@ -37,26 +36,23 @@ class NameListNode(ListNode):
 
 
 class StmtListNode(ListNode):
-    def __init__(self, node):
-        super().__init__(node)
+    def __init__(self, lineno, node):
+        super().__init__(lineno, node)
 
 
 class CaseExprListNode(ListNode):
-    def __init__(self, node):
-        super().__init__(node)
-
+    def __init__(self, lineno, node):
+        super().__init__(lineno, node)
 
 class ExprListNode(ListNode):
-    def __init__(self, node):
-        super().__init__(node)
-
+    def __init__(self, lineno, node):
+        super().__init__(lineno, node)
 
 class ArgsListNode(ListNode):
-    def __init__(self, node):
-        super().__init__(node)
-
+    def __init__(self, lineno, node):
+        super().__init__(lineno, node)
 
 class RoutineDeclListNode(ListNode):
-    def __init__(self, node, _id):
-        super().__init__(node)
+    def __init__(self, lineno, node, _id):
+        super().__init__(lineno, node)
         self.id = _id
